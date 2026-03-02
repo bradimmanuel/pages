@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>University AI: Roles × Modalities</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #faf8f4;
+    --ink: #1c1917;
+    --ink-light: #78716c;
+    --rule: #e7e2da;
+    --accent: #c2410c;
+    --accent-light: #fff7ed;
+    --cell-active: #c2410c;
+    --cell-hover: #fed7aa;
+    --cell-off: #f0ede8;
+    --cell-partial: #fdba74;
+    --col-hl: #fff7ed;
+    --row-hl: #fff7ed;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: #1c1917;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    text-decoration: none;
+    z-index: 9999;
+    transition: top 0.2s;
+  }
+  .skip-link:focus { top: 16px; }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- Header ---- */
+  header {
+    padding: 32px 40px 20px;
+    border-bottom: 1.5px solid var(--rule);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+  header p {
+    font-size: 0.6875rem;
+    color: var(--ink-light);
+    max-width: 400px;
+    line-height: 1.6;
+  }
+
+  /* ---- Legend ---- */
+  .legend {
+    display: flex;
+    gap: 20px;
+    padding: 12px 40px;
+    border-bottom: 1px solid var(--rule);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.625rem;
+    color: var(--ink-light);
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .dot-primary { background: var(--accent); }
+  .dot-secondary { background: var(--cell-partial); }
+  .dot-none { background: var(--cell-off); border: 1px solid var(--rule); }
+  .legend-note {
+    margin-left: auto;
+    font-size: 0.625rem;
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  /* ---- Controls ---- */
+  .controls {
+    padding: 10px 40px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .controls span { font-size: 0.625rem; color: var(--ink-light); margin-right: 4px; }
+  .filter-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.625rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--rule);
+    background: var(--bg);
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .clear-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.625rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.15s;
+  }
+  .clear-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  /* ---- Matrix wrapper ---- */
+  .matrix-wrap {
+    overflow: auto;
+    padding: 0 40px 40px;
+  }
+
+  /* ---- Matrix table ---- */
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 0;
+    min-width: 900px;
+  }
+
+  /* Corner cell */
+  .corner {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 14px 16px 10px;
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--ink);
+    border-right: 1.5px solid var(--rule);
+  }
+  .corner-label {
+    font-size: 0.5625rem;
+    color: var(--ink-light);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .corner-label .down { display: block; }
+  .corner-label .across { display: block; opacity: 0.6; }
+
+  /* Column headers (modalities) */
+  th.col-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg);
+    padding: 12px 6px 8px;
+    text-align: center;
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--ink);
+    min-width: 88px;
+    max-width: 100px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  th.col-header:hover, th.col-header.col-hl { background: var(--col-hl); }
+  th.col-header .modality-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.71875rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.3;
+    display: block;
+    margin-bottom: 4px;
+  }
+  th.col-header .modality-tag {
+    display: inline-block;
+    font-size: 0.53125rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: var(--rule);
+    color: var(--ink-light);
+    letter-spacing: 0.3px;
+  }
+  th.col-header.col-hl .modality-tag {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Row headers (roles) */
+  th.row-header {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background: var(--bg);
+    padding: 10px 16px 10px 0;
+    text-align: right;
+    vertical-align: middle;
+    border-right: 1.5px solid var(--rule);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  th.row-header:hover, th.row-header.row-hl { background: var(--row-hl); }
+  th.row-header .role-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink);
+    display: block;
+  }
+  th.row-header .role-dept {
+    font-size: 0.59375rem;
+    color: var(--ink-light);
+    display: block;
+    margin-top: 1px;
+  }
+
+  /* Separator rows */
+  .dept-sep td, .dept-sep th {
+    background: var(--rule) !important;
+    height: 2px !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* Data cells */
+  td.cell {
+    padding: 5px;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+    transition: background 0.15s, transform 0.1s;
+    cursor: default;
+    position: relative;
+  }
+
+  .cell-inner {
+    width: 52px;
+    height: 32px;
+    border-radius: 4px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .cell-inner.strength-2 { background: var(--accent); }
+  .cell-inner.strength-1 { background: var(--cell-partial); }
+  .cell-inner.strength-0 { background: var(--cell-off); }
+
+  td.cell:hover .cell-inner { transform: scale(1.1); box-shadow: 0 2px 8px rgba(194,65,12,0.2); }
+  td.cell.dimmed .cell-inner { opacity: 0.15; }
+  td.cell.highlighted .cell-inner.strength-2 { box-shadow: 0 0 0 2px var(--accent); }
+  td.cell.highlighted .cell-inner.strength-1 { box-shadow: 0 0 0 2px var(--cell-partial); }
+
+  .cell-inner .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.8);
+  }
+  .cell-inner.strength-0 .dot { background: var(--rule); }
+  .cell-inner.strength-1 .dot { background: rgba(255,255,255,0.9); }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    z-index: 1000;
+    background: #fff;
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 18px;
+    max-width: 320px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    box-shadow: 0 8px 32px rgba(28,25,23,0.12);
+  }
+  #tooltip.show { opacity: 1; }
+  #tooltip .tt-role { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-light); margin-bottom: 2px; }
+  #tooltip .tt-modality { font-family: 'Fraunces', serif; font-size: 0.875rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  #tooltip .tt-strength {
+    display: inline-block; font-size: 0.59375rem; padding: 2px 8px;
+    border-radius: 10px; margin-bottom: 10px;
+  }
+  #tooltip .tt-strength.s2 { background: var(--accent); color: #fff; }
+  #tooltip .tt-strength.s1 { background: var(--cell-partial); color: var(--ink); }
+  #tooltip .tt-why { font-size: 0.65625rem; color: #555; line-height: 1.6; margin-bottom: 8px; border-top: 1px solid var(--rule); padding-top: 8px; }
+  #tooltip ul { list-style: none; }
+  #tooltip ul li { font-size: 0.625rem; color: var(--ink); padding: 3px 0; border-bottom: 1px solid #f5f2ee; line-height: 1.5; }
+  #tooltip ul li:last-child { border: none; }
+  #tooltip ul li::before { content: "→ "; color: var(--accent); font-weight: 700; }
+
+  /* Info panel */
+  #info-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: 340px;
+    background: #fff;
+    border-left: 1.5px solid var(--rule);
+    padding: 24px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+    z-index: 50;
+    box-shadow: -4px 0 24px rgba(28,25,23,0.08);
+  }
+  #info-panel.open { transform: translateX(0); }
+  #info-panel h3 { font-family: 'Fraunces', serif; font-size: 1.125rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  #info-panel .panel-sub { font-size: 0.625rem; color: var(--ink-light); margin-bottom: 16px; }
+  #info-panel .panel-section { margin-bottom: 16px; }
+  #info-panel .panel-section-title { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-light); margin-bottom: 8px; }
+  #info-panel .modality-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 6px; margin: 3px;
+    font-size: 0.625rem; cursor: default;
+  }
+  #info-panel .modality-pill.s2 { background: var(--accent); color: #fff; }
+  #info-panel .modality-pill.s1 { background: var(--cell-partial); color: var(--ink); }
+  .close-panel {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: 1.5px solid var(--rule);
+    border-radius: 50%; width: 28px; height: 28px;
+    cursor: pointer; font-size: 0.875rem; color: var(--ink-light);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .close-panel:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .use-case-item {
+    padding: 8px 10px; border-radius: 6px;
+    background: var(--bg); margin-bottom: 6px;
+    font-size: 0.625rem; line-height: 1.5; color: var(--ink);
+    border-left: 3px solid var(--accent);
+  }
+  .use-case-item .uc-mod { font-size: 0.5625rem; color: var(--ink-light); margin-bottom: 3px; }
+  .outcome-tag { display: inline-block; font-size: 0.5rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; margin-bottom: 5px; }
+  .outcome-time { background: #f5f0eb; color: #7f7776; }
+  .outcome-capacity { background: #eef6f8; color: #007c92; }
+  .outcome-new { background: #fff7ed; color: #c2410c; }
+  #tooltip .outcome-tag { display: inline-block; margin-bottom: 6px; }
+
+  .outcome-controls { padding: 8px 40px 10px; border-bottom: 1px solid var(--rule); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .outcome-controls span { font-size: 0.625rem; color: var(--ink-light); margin-right: 4px; }
+  .outcome-filter-btn { font-family: 'DM Mono', monospace; font-size: 0.625rem; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--rule); background: var(--bg); cursor: pointer; transition: all 0.15s; font-weight: 700; letter-spacing: 0.3px; }
+  .outcome-filter-btn.of-time { color: #7f7776; border-color: #c8c2bc; }
+  .outcome-filter-btn.of-time:hover, .outcome-filter-btn.of-time.active { background: #f5f0eb; border-color: #7f7776; color: #7f7776; }
+  .outcome-filter-btn.of-capacity { color: #007c92; border-color: #99ccd4; }
+  .outcome-filter-btn.of-capacity:hover, .outcome-filter-btn.of-capacity.active { background: #eef6f8; border-color: #007c92; color: #007c92; }
+  .outcome-filter-btn.of-new { color: #c2410c; border-color: #f4b896; }
+  .outcome-filter-btn.of-new:hover, .outcome-filter-btn.of-new.active { background: #fff7ed; border-color: #c2410c; color: #c2410c; }
+  .filter-btn:focus-visible,
+  .clear-btn:focus-visible,
+  td.cell:focus-visible,
+  th.col-header:focus-visible,
+  th.row-header:focus-visible,
+  .close-panel:focus-visible {
+    outline: 3px solid #c2410c;
+    outline-offset: 2px;
+  }
+  #info-panel:focus { outline: none; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header role="banner">
+  <div>
+    <h1>AI in Higher Education<br><em style="font-weight:300;font-size:22px;font-style:italic">Roles × Modalities</em></h1>
+  </div>
+  <p>Click any row (role) or column (modality) to highlight connections. Click a cell to explore use cases. Filled = primary fit, light = secondary or emerging use.</p>
+</header>
+<main id="main-content">
+
+<div class="legend" role="note" aria-label="Matrix legend">
+  <div class="legend-item"><div class="legend-dot dot-primary"></div> Primary modality — strong, current fit</div>
+  <div class="legend-item"><div class="legend-dot dot-secondary"></div> Secondary — emerging or supporting use</div>
+  <div class="legend-item"><div class="legend-dot dot-none"></div> Not applicable</div>
+  <span class="legend-note">Click a row or column header to filter · Click a cell for use cases</span>
+</div>
+
+<div class="controls" role="group" aria-label="Filter by department">
+  <span>Filter by dept:</span>
+  <button class="filter-btn" onclick="filterDept('Academic')" aria-pressed="false">Academic</button>
+  <button class="filter-btn" onclick="filterDept('Admin')" aria-pressed="false">Administrative</button>
+  <button class="filter-btn" onclick="filterDept('IT')" aria-pressed="false">IT & Engineering</button>
+  <button class="filter-btn" onclick="filterDept('Student')" aria-pressed="false">Student Services</button>
+  <button class="filter-btn" onclick="filterDept('Research')" aria-pressed="false">Research</button>
+  <button class="filter-btn" onclick="filterDept('Operations')" aria-pressed="false">Operations</button>
+  <button class="clear-btn" onclick="clearAll()" aria-label="Clear all filters">Clear</button>
+</div>
+
+<div class="outcome-controls" role="group" aria-label="Filter by outcome type">
+  <span>Filter by outcome:</span>
+  <button class="outcome-filter-btn of-time" aria-pressed="false" onclick="filterOutcome('time')">Time Saved</button>
+  <button class="outcome-filter-btn of-capacity" aria-pressed="false" onclick="filterOutcome('capacity')">Capacity Expanded</button>
+  <button class="outcome-filter-btn of-new" aria-pressed="false" onclick="filterOutcome('new')">New Capability Unlocked</button>
+</div>
+
+<div class="matrix-wrap">
+<table id="matrix">
+</table>
+</div>
+
+<div id="tooltip">
+  <div class="tt-role" id="tt-role"></div>
+  <div class="tt-modality" id="tt-modality"></div>
+  <div class="tt-strength" id="tt-strength"></div>
+  <div class="tt-why" id="tt-why"></div>
+  <ul id="tt-list"></ul>
+</div>
+
+<div id="info-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" aria-hidden="true">
+  <button class="close-panel" onclick="closePanel()" aria-label="Close panel">✕</button>
+  <h3 id="panel-title"></h3>
+  <div class="panel-sub" id="panel-sub"></div>
+  <div id="panel-content"></div>
+</div>
+
+<script>
+const MODALITIES = [
+  { id: 'conv',    name: 'Conversational\nAI',    tag: 'Chat / Agents',        outcome: 'time' },
+  { id: 'langgen', name: 'Language\nGeneration',  tag: 'Drafting / Writing',   outcome: 'time' },
+  { id: 'synth',   name: 'Synthesis &\nAnalysis', tag: 'Summarization',        outcome: 'capacity' },
+  { id: 'auto',    name: 'Intelligent\nAutomation', tag: 'Agentic Workflows',  outcome: 'capacity' },
+  { id: 'rag',     name: 'Retrieval &\nKnowledge', tag: 'RAG / Search',        outcome: 'time' },
+  { id: 'pred',    name: 'Predictive\nAnalytics', tag: 'ML / Forecasting',     outcome: 'new' },
+  { id: 'multi',   name: 'Multimodal\nAI',        tag: 'Vision / Audio / Docs', outcome: 'capacity' },
+];
+
+// Outcome label map
+const OUTCOME_LABELS = { time: 'Time Saved', capacity: 'Capacity Expanded', new: 'New Capability Unlocked' };
+
+// strength: 2=primary, 1=secondary, 0=not applicable
+// cases: [modality_id, description] — best 1-2 per cell
+const ROLES = [
+  {
+    dept: 'Academic', role: 'Faculty', sub: 'Academic Affairs',
+    cells: {
+      conv:    { s:1, why:'Dialog for course design and student Q&A', cases:['AI course design partner that asks structured questions and builds a syllabus','Office-hours bot that handles common conceptual Qs before students see the professor'] },
+      langgen: { s:2, why:'Core Gen AI value: synthesizing pedagogy, discipline, and student context into drafted materials', cases:['Draft assignment briefs that scaffold to different learning levels','Generate rubrics that articulate nuanced disciplinary standards'] },
+      synth:   { s:2, why:'Interpreting student feedback and literature across unstructured sources', cases:['Synthesize end-of-term student feedback into actionable course improvement themes','Condense a body of readings into a structured discussion framework'] },
+      auto:    { s:0, why:'', cases:[] },
+      rag:     { s:1, why:'Surfacing relevant prior work and institutional resources', cases:['Find relevant past course materials when redesigning a module','Retrieve applicable university policies when drafting syllabi'] },
+      pred:    { s:0, why:'', cases:[] },
+      multi:   { s:1, why:'Processing documents and media for course use', cases:['Generate alt-text for course images at scale','Analyze uploaded student work samples to inform feedback'] },
+    }
+  },
+  {
+    dept: 'Academic', role: 'Graduate Students', sub: 'Academic Affairs',
+    cells: {
+      conv:    { s:2, why:'Dissertation coaching and research dialogue require adaptive, multi-turn reasoning', cases:['Argue against thesis to stress-test the argument','Generate likely committee questions from dissertation content'] },
+      langgen: { s:2, why:'Academic writing development is generative and judgment-dependent — not templatable', cases:['Coach voice and structure in dissertation drafts across iterations','Help reframe a failed methodology into a publishable negative result'] },
+      synth:   { s:2, why:'Literature synthesis across hundreds of unstructured papers requires comprehension', cases:['Synthesize conflicting findings across 200 papers with nuanced framing','Map research gaps from a body of work to guide a new proposal'] },
+      auto:    { s:0, why:'', cases:[] },
+      rag:     { s:2, why:'Direct value in finding relevant literature and institutional resources', cases:['Semantic search across a citation library to find methodologically similar studies','Surface relevant funding opportunities matched to research focus'] },
+      pred:    { s:0, why:'', cases:[] },
+      multi:   { s:1, why:'Processing documents, papers, and figures as part of research', cases:['Extract and summarize key tables from scanned academic papers','Analyze visual data outputs as part of a research workflow'] },
+    }
+  },
+  {
+    dept: 'Academic', role: 'Undergraduate Students', sub: 'Academic Affairs',
+    cells: {
+      conv:    { s:2, why:'Adaptive tutoring requires real-time interpretation of where a student is struggling', cases:['Re-explain a concept with a different analogy when the first one does not land','Ask Socratic follow-up questions rather than just providing the answer'] },
+      langgen: { s:2, why:'Writing coaching requires generative feedback tailored to each student\'s specific draft', cases:['Identify the gap between what a student wrote and what they meant','Generate targeted revision suggestions at the argument level, not just surface edits'] },
+      synth:   { s:1, why:'Supporting research skills development', cases:['Help a student synthesize multiple sources into a coherent thesis','Surface the key points of a complex reading in accessible language'] },
+      auto:    { s:0, why:'', cases:[] },
+      rag:     { s:1, why:'Course and library resource discovery', cases:['Find relevant library resources for a research paper topic','Surface applicable academic support services for a student\'s situation'] },
+      pred:    { s:0, why:'', cases:[] },
+      multi:   { s:1, why:'Document and accessibility support', cases:['Generate accessible versions of complex readings','Help a student interpret a complex data visualization in a course'] },
+    }
+  },
+  { dept:'_sep' },
+  {
+    dept: 'Admin', role: 'Registrar', sub: 'Administrative',
+    cells: {
+      conv:    { s:2, why:'High-volume student inquiries require contextual interpretation of ambiguous policy questions', cases:['Handle nuanced enrollment and transcript questions that span multiple policies','Interpret a student\'s complex situation and identify which policy applies'] },
+      langgen: { s:1, why:'Policy communications that must be tailored to specific student situations', cases:['Draft a plain-language explanation of a complex enrollment hold for a specific student','Generate a degree completion letter that accurately reflects a non-standard path'] },
+      synth:   { s:1, why:'Synthesizing scheduling complexity and policy across departments', cases:['Identify conflicts across a semester course schedule and summarize tradeoffs','Synthesize multi-department input on a curriculum change proposal'] },
+      auto:    { s:2, why:'Multi-step workflows triggered by enrollment events benefit from agentic execution', cases:['Agent that detects a graduation eligibility flag, checks requirements, and drafts a student notice','Workflow integration with SIS to trigger plain-language notifications when status changes'] },
+      rag:     { s:2, why:'Policy retrieval is the core use case — answers must come from actual policy documents', cases:['Answer nuanced degree requirement questions grounded in the actual catalog','Surface applicable transfer credit rules for a specific student\'s situation'] },
+      pred:    { s:1, why:'Demand forecasting for course scheduling', cases:['Predict section demand by department for next semester','Model impact of policy changes on enrollment patterns'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'Admin', role: 'Admissions', sub: 'Administrative',
+    cells: {
+      conv:    { s:2, why:'Prospective student conversations require contextual, empathetic, and informative dialogue', cases:['Handle nuanced "what are my chances" conversations with honesty and care','Answer complex multi-part questions about program fit and financial aid in one thread'] },
+      langgen: { s:2, why:'Personalized yield outreach at scale requires genuine tailoring to student context', cases:['Draft yield emails that reflect a student\'s specific program visit and stated interests','Craft a compassionate, accurate response to a waitlisted student\'s appeal'] },
+      synth:   { s:2, why:'Synthesizing committee deliberations and applicant patterns requires interpretive reasoning', cases:['Synthesize committee discussion notes into a coherent admit/deny rationale','Identify themes across a pool of application essays to inform recruitment messaging'] },
+      auto:    { s:1, why:'Workflow integration with CRM and communication systems', cases:['Trigger personalized outreach sequences based on application status changes','Agent that monitors deposit deadlines and generates timely nudge communications'] },
+      rag:     { s:1, why:'Program information retrieval for counselors and students', cases:['Surface accurate program requirements for a counselor answering a specific applicant question','Retrieve relevant scholarship information matched to a student\'s profile'] },
+      pred:    { s:2, why:'Yield prediction and recruitment optimization are core admissions use cases', cases:['Predict yield by applicant segment to optimize financial aid strategy','Model enrollment impact of changes to recruitment geography'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'Admin', role: 'Financial Aid', sub: 'Administrative',
+    cells: {
+      conv:    { s:2, why:'Aid questions are complex, emotionally charged, and situation-specific — templated responses fail', cases:['Answer a student\'s multi-part question about aid eligibility, packaging, and appeals in one conversation','Help a first-gen student understand their award in genuinely plain language'] },
+      langgen: { s:2, why:'Appeal responses and award explanations require empathetic, accurate, individualized drafting', cases:['Draft a response to an emotional appeal letter that is honest, kind, and specific','Generate a plain-language award summary that explains the real cost of attendance for this student'] },
+      synth:   { s:1, why:'Interpreting a student\'s multi-year aid history to recommend the best path', cases:['Synthesize a complex aid history across enrollment interruptions into a clear recommendation','Identify edge cases in policy that a specific student\'s situation may qualify for'] },
+      auto:    { s:2, why:'Workflow integration with SIS for status-driven communication', cases:['Trigger a tailored aid revision letter when a status change occurs in Banner','Agent that monitors SAP (satisfactory academic progress) flags and initiates outreach workflows'] },
+      rag:     { s:2, why:'Policy and regulation retrieval grounded in actual federal and institutional rules', cases:['Answer a nuanced FAFSA question grounded in current federal regulations','Surface applicable institutional policy for a specific unusual aid situation'] },
+      pred:    { s:1, why:'Budget modeling and award optimization', cases:['Model impact of aid packaging strategies on yield and budget','Forecast need for professional judgment appeals based on economic signals'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'Admin', role: 'HR & People Ops', sub: 'Administrative',
+    cells: {
+      conv:    { s:2, why:'HR questions are policy-dense and situation-specific — staff need interpretive dialogue, not FAQ', cases:['Help a manager navigate an ambiguous performance situation against actual policy','Answer a new hire\'s benefits questions in context of their specific enrollment window'] },
+      langgen: { s:2, why:'Sensitive HR communications require nuanced, human-aware language generation', cases:['Rewrite a job description to reduce gendered language while preserving requirements','Draft a sensitive response to an employee raising a workplace concern'] },
+      synth:   { s:2, why:'Exit interview and engagement data synthesis requires thematic interpretation', cases:['Synthesize exit interview transcripts into actionable retention themes for leadership','Identify patterns in performance review language that suggest systemic equity concerns'] },
+      auto:    { s:1, why:'Onboarding and lifecycle event workflows', cases:['Generate tailored onboarding plans from a new hire\'s role and background profile','Trigger policy explanation communications when a status change (leave, promotion) occurs'] },
+      rag:     { s:2, why:'Policy retrieval grounded in actual handbooks and benefit plan documents', cases:['Answer nuanced leave policy questions from the actual handbook, not generic HR knowledge','Surface applicable accommodation options from real policy documents for a specific situation'] },
+      pred:    { s:1, why:'Workforce planning and retention modeling', cases:['Model attrition risk by department to inform retention strategy','Forecast staffing needs based on projected enrollment and service demand'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'Admin', role: 'Provost / Deans', sub: 'Administrative',
+    cells: {
+      conv:    { s:1, why:'Executive AI assistants for briefing prep and decision support', cases:['Interactive briefing prep before a faculty senate meeting','Dialog-based scenario exploration for enrollment strategy decisions'] },
+      langgen: { s:2, why:'Executive communications require synthesizing complexity into persuasive, accurate narrative', cases:['Draft a faculty senate response that addresses multiple competing concerns at once','Generate a compelling narrative from a portfolio of department annual reports'] },
+      synth:   { s:2, why:'Synthesizing institutional complexity across many stakeholders is the core leadership challenge', cases:['Distill 30 department chair reports into themes and anomalies for a provost briefing','Identify tensions across strategic plan stakeholder comments and surface the key tradeoffs'] },
+      auto:    { s:1, why:'Report aggregation and briefing workflows', cases:['Agent that aggregates weekly operational updates into a single executive digest','Automated trend alerts when institutional KPIs shift significantly'] },
+      rag:     { s:1, why:'Policy and precedent retrieval for governance decisions', cases:['Surface relevant academic policy precedents when evaluating an unusual faculty request','Retrieve accreditation standards relevant to a curriculum change proposal'] },
+      pred:    { s:2, why:'Strategic planning requires scenario modeling across enrollment, finance, and workforce', cases:['Model financial impact of three enrollment scenarios over a five-year horizon','Forecast faculty retirement wave and its impact on department staffing needs'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  { dept:'_sep' },
+  {
+    dept: 'IT', role: 'Service Desk', sub: 'IT & Infrastructure',
+    cells: {
+      conv:    { s:2, why:'Ambiguous tickets and frustrated users require interpretive, empathetic conversational triage', cases:['Interpret a vague ticket and ask the right clarifying questions to accelerate resolution','Draft a response explaining a complex fix in language matched to a non-technical user'] },
+      langgen: { s:2, why:'Knowledge base generation and user communications require contextual, audience-aware writing', cases:['Generate KB articles from scratch based on a cluster of similar resolved tickets','Produce a shift handoff summary that captures nuance, not just ticket counts'] },
+      synth:   { s:2, why:'Identifying patterns across unstructured ticket data requires genuine synthesis', cases:['Synthesize a week of ticket themes into a narrative for IT leadership','Identify systemic issues hidden in a high-volume period by clustering ticket language'] },
+      auto:    { s:2, why:'Agentic tier-1 resolution is the highest-value automation target for service desk', cases:['Agent that triages a ticket, attempts KB-guided resolution, and escalates with full context if needed','Workflow that detects a common incident type and auto-routes with suggested resolution steps'] },
+      rag:     { s:2, why:'KB retrieval is the foundational capability — answers must come from actual institutional KB', cases:['Surface the most relevant past resolution when a new ticket arrives','Retrieve applicable policy when a ticket involves access or compliance questions'] },
+      pred:    { s:1, why:'Ticket volume forecasting for staffing', cases:['Predict ticket volume spikes around semester start for proactive staffing','Forecast incident probability based on planned system changes'] },
+      multi:   { s:1, why:'Processing attached screenshots and error images', cases:['Interpret an error screenshot attached to a ticket to accelerate diagnosis','Extract and structure information from an attached document or form'] },
+    }
+  },
+  {
+    dept: 'IT', role: 'Security / CISO', sub: 'IT & Infrastructure',
+    cells: {
+      conv:    { s:1, why:'Executive briefing and incident communication preparation', cases:['Interactive prep for a board security briefing — anticipate questions and sharpen responses','Dialog-based threat scenario planning for tabletop exercises'] },
+      langgen: { s:2, why:'Security communications require precise, audience-appropriate language at high stakes', cases:['Draft a campus phishing awareness campaign that feels relevant to Stanford\'s specific community','Compose an incident communication that is accurate, calm, and appropriately urgent'] },
+      synth:   { s:2, why:'Threat intelligence synthesis across unstructured intel sources is core security work', cases:['Synthesize threat intel feeds into an executive brief with institutional risk framing','Interpret an ambiguous log cluster and generate hypotheses about what may have occurred'] },
+      auto:    { s:2, why:'Automated detection, alerting, and response workflows are foundational security operations', cases:['Agent that monitors access logs, flags anomalies, and generates an analyst brief','Automated incident triage that categorizes severity and routes to the right responder'] },
+      rag:     { s:2, why:'Policy and compliance retrieval grounded in actual frameworks and regulations', cases:['Answer a nuanced FERPA question from the actual regulation','Surface applicable NIST controls for a specific system change under review'] },
+      pred:    { s:2, why:'Threat prediction and user behavior analytics are core security ML use cases', cases:['Predict accounts at elevated risk of compromise based on behavioral signals','Model phishing susceptibility by user population to focus training'] },
+      multi:   { s:1, why:'Document and email analysis for threat detection', cases:['Analyze email content and metadata to identify sophisticated phishing attempts','Process and classify uploaded documents for data sensitivity assessment'] },
+    }
+  },
+  {
+    dept: 'IT', role: 'IT Leadership / CIO', sub: 'IT & Infrastructure',
+    cells: {
+      conv:    { s:1, why:'Executive decision support and briefing prep', cases:['Interactive prep for a difficult budget conversation with CFO','Scenario dialogue for technology strategy planning with stakeholders'] },
+      langgen: { s:2, why:'Strategic communications require synthesizing complexity into persuasive institutional narrative', cases:['Draft a board-ready technology strategy narrative from a portfolio of project statuses','Generate talking points for a difficult conversation about a failed project or delayed rollout'] },
+      synth:   { s:2, why:'Portfolio synthesis and vendor analysis require interpretive reasoning across unstructured inputs', cases:['Synthesize RFP vendor responses into a comparison narrative with tradeoffs articulated','Distill a multi-team quarterly review into a coherent executive summary'] },
+      auto:    { s:1, why:'Portfolio monitoring and reporting workflows', cases:['Agent that aggregates weekly project status updates into a single leadership digest','Automated flagging when project risks or budget variances exceed thresholds'] },
+      rag:     { s:1, why:'Contract and policy retrieval for vendor and governance decisions', cases:['Retrieve relevant contract terms when evaluating a vendor renewal','Surface applicable governance policy for a specific procurement or data decision'] },
+      pred:    { s:1, why:'Technology demand and capacity planning', cases:['Model infrastructure demand based on enrollment and research growth projections','Forecast technology refresh cycles and capital needs over a multi-year horizon'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'IT', role: 'Systems / Data Engineering', sub: 'IT & Infrastructure',
+    cells: {
+      conv:    { s:1, why:'Technical problem-solving dialogue and debugging', cases:['Debug a complex integration failure through iterative dialogue with an AI that reasons across logs','Explore architecture options conversationally before committing to a design'] },
+      langgen: { s:2, why:'Documentation generation and technical communication require contextual, audience-aware writing', cases:['Generate human-readable API documentation that explains why, not just what','Translate a product team\'s plain-language requirements into a technical integration spec'] },
+      synth:   { s:1, why:'Synthesizing institutional data into actionable narratives', cases:['Turn a data warehouse query result into a plain-language trend narrative for a dean','Identify non-obvious patterns across multiple datasets and articulate their implications'] },
+      auto:    { s:2, why:'Code generation and agentic integration workflows are the highest-value use for engineering teams', cases:['Generate data pipeline scripts from a researcher\'s described analytical workflow','Agent that detects an integration failure, diagnoses the root cause, and drafts a resolution plan'] },
+      rag:     { s:2, why:'Code and documentation retrieval grounded in institutional patterns and standards', cases:['Surface relevant past integration patterns when designing a new connection to Banner','Retrieve applicable data governance policies for a new analytics project'] },
+      pred:    { s:2, why:'System performance modeling and capacity forecasting', cases:['Predict storage and compute demand growth for infrastructure planning','Model the performance impact of a proposed schema change before it goes to production'] },
+      multi:   { s:1, why:'Processing technical documents, diagrams, and logs', cases:['Analyze an architecture diagram attached to a ticket to understand current state','Extract and structure data from legacy PDF reports that predate digital formats'] },
+    }
+  },
+  { dept:'_sep' },
+  {
+    dept: 'Student', role: 'Academic Advising', sub: 'Student Services',
+    cells: {
+      conv:    { s:2, why:'Advising is fundamentally interpretive — students present ambiguous situations requiring judgment', cases:['Interpret a student\'s email to identify the real concern beneath the stated question','Pre-advising bot that surfaces relevant information and warms up the conversation before the human meeting'] },
+      langgen: { s:2, why:'Follow-up communications and situation summaries require empathetic, personalized drafting', cases:['Draft a follow-up message that balances academic guidance with emotional acknowledgment','Generate a personalized degree completion roadmap narrative from a complex academic history'] },
+      synth:   { s:2, why:'Synthesizing a student\'s multi-factor situation across records and prior conversations', cases:['Synthesize a student\'s academic history, financial situation, and prior advising notes into a briefing for a new advisor','Identify themes across a caseload to surface systemic issues affecting a student population'] },
+      auto:    { s:1, why:'Workflow integration with SIS for proactive outreach', cases:['Trigger an advisor outreach draft when LMS engagement drops below a threshold','Agent that monitors early alert flags and generates a prioritized outreach queue with context'] },
+      rag:     { s:2, why:'Policy retrieval grounded in actual degree requirements and institutional policies', cases:['Answer a nuanced double-major requirement question from the actual catalog','Surface applicable exception or waiver policy for a specific student situation'] },
+      pred:    { s:2, why:'Early alert and at-risk identification are foundational student success use cases', cases:['Flag students at academic risk based on early-semester engagement and grade signals','Identify students likely to need advising intervention before they self-identify'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'Student', role: 'Mental Health Services', sub: 'Student Services',
+    cells: {
+      conv:    { s:2, why:'After-hours triage and resource routing require nuanced, empathetic dialogue — not scripted responses', cases:['24/7 triage chatbot that assesses urgency, provides immediate support, and routes to appropriate care','Help a student articulate what they are experiencing to prepare for a first appointment'] },
+      langgen: { s:2, why:'Clinical documentation and psychoeducational content require contextual, sensitive language generation', cases:['Help a clinician draft session notes that are clear and time-efficient without sacrificing nuance','Generate psychoeducational content tailored to a specific student population (first-gen, international)'] },
+      synth:   { s:2, why:'Understanding caseload trends from intake and session data requires interpretive synthesis', cases:['Synthesize themes from intake forms to help a director understand what students are presenting with this semester','Identify patterns in crisis call data to inform staffing and outreach strategy'] },
+      auto:    { s:1, why:'Appointment and care coordination workflows', cases:['Automate waitlist management with intelligent priority routing based on intake urgency signals','Trigger follow-up outreach workflows for students who miss a scheduled appointment'] },
+      rag:     { s:1, why:'Clinical resource and referral retrieval', cases:['Surface relevant campus and community resources matched to a student\'s presenting concerns','Retrieve applicable protocols for specific clinical situations'] },
+      pred:    { s:2, why:'Identifying students at elevated risk before they reach crisis is the most impactful use', cases:['Model mental health risk signals from behavioral and engagement data (with ethics guardrails)','Predict demand surge periods to inform proactive staffing'] },
+      multi:   { s:0, why:'', cases:[] },
+    }
+  },
+  {
+    dept: 'Student', role: 'Disability Services', sub: 'Student Services',
+    cells: {
+      conv:    { s:1, why:'Student intake and faculty communication support', cases:['Help a student articulate their functional limitations for an accommodation request','Answer faculty questions about how to implement a specific accommodation in their course context'] },
+      langgen: { s:2, why:'Accommodation implementation guidance requires contextual reasoning about course format and disability type — not mail merge', cases:['Help a coordinator reason through how a standard accommodation should be adapted for an unusual course format','Draft a faculty guidance letter that explains the pedagogical rationale, not just the requirement'] },
+      synth:   { s:1, why:'Synthesizing documentation into functional limitation summaries', cases:['Synthesize a student\'s documentation into a clear functional limitation summary for a new coordinator','Identify patterns across accommodation requests to inform proactive course design outreach to faculty'] },
+      auto:    { s:1, why:'Document accessibility remediation workflows', cases:['Automated pipeline that checks course documents for accessibility and flags issues for human review','Trigger alternative format production workflows when a student registers with specific needs'] },
+      rag:     { s:2, why:'ADA/504 policy retrieval grounded in actual law and institutional policy', cases:['Answer a nuanced faculty question about accommodation obligations from actual legal and policy sources','Surface applicable precedent for an unusual accommodation request'] },
+      pred:    { s:0, why:'', cases:[] },
+      multi:   { s:2, why:'Document remediation and accessibility generation are core multimodal use cases', cases:['Auto-generate alt-text for course images and materials at scale','Assess and remediate PDF accessibility issues across a course materials library'] },
+    }
+  },
+  { dept:'_sep' },
+  {
+    dept: 'Research', role: 'Principal Investigators', sub: 'Research',
+    cells: {
+      conv:    { s:2, why:'Research dialogue requires adaptive reasoning about methodology, interpretation, and strategy', cases:['Research dialogue partner for reasoning through an unexpected dataset result','Help a PI think through the ethical implications of a proposed study design change'] },
+      langgen: { s:2, why:'Grant writing and research communication are the highest-value Gen AI use cases in research', cases:['Draft a specific aims page connecting preliminary data to a compelling research gap','Translate technical methods into accessible language for a multidisciplinary proposal'] },
+      synth:   { s:2, why:'Literature synthesis and cross-paper reasoning are core research tasks at impossible scale', cases:['Synthesize conflicting findings across 200 papers with nuanced framing of the debate','Generate reviewer-anticipated objections to help the PI preemptively address them'] },
+      auto:    { s:1, why:'Research workflow and compliance automation', cases:['Agent that monitors funding opportunity databases and alerts matched PIs','Workflow integration that triggers compliance checklist generation when a new award is activated'] },
+      rag:     { s:2, why:'Retrieval grounded in actual award documents and prior proposals is foundational', cases:['Answer compliance questions grounded in the actual award terms and applicable regulations','Surface relevant prior proposals when a PI is drafting a new submission'] },
+      pred:    { s:1, why:'Funding success and research impact modeling', cases:['Model probability of funding success by agency and mechanism based on historical data','Predict which active projects are at risk of missing milestones based on progress signals'] },
+      multi:   { s:2, why:'Processing scientific documents, data visualizations, and figures', cases:['Analyze microscopy or imaging data as part of a research pipeline','Extract and structure data from scanned legacy lab notebooks or publications'] },
+    }
+  },
+  {
+    dept: 'Research', role: 'Grants & Compliance', sub: 'Research',
+    cells: {
+      conv:    { s:1, why:'PI guidance on complex compliance and submission questions', cases:['Help a PI navigate a complex subcontract arrangement question','Interpret a sponsor\'s ambiguous requirement in the context of a specific award'] },
+      langgen: { s:2, why:'Compliance documents and reports require contextual, accurate, and audience-aware generation', cases:['Draft a grant progress report narrative from a PI\'s bullet-pointed updates','Generate a plain-language budget justification from a PI\'s research plan'] },
+      synth:   { s:2, why:'Synthesizing award portfolio status and compliance risk across many active grants', cases:['Synthesize an office\'s active award portfolio into a risk-stratified status brief','Identify compliance patterns and concerns across a fiscal year\'s audit findings'] },
+      auto:    { s:2, why:'Compliance deadline monitoring and reporting workflows are high-value automation targets', cases:['Agent that monitors award milestone deadlines and triggers drafting workflows','Automated compliance checklist generation triggered by award type and sponsor'] },
+      rag:     { s:2, why:'Regulation and policy retrieval grounded in actual sponsor requirements and federal rules', cases:['Answer a nuanced question about cost allowability from actual OMB Uniform Guidance','Surface applicable reporting requirements for a specific agency and award type'] },
+      pred:    { s:1, why:'Risk scoring for award portfolio management', cases:['Score active awards by compliance risk based on milestone status, budget, and PI history','Predict which awards are likely to need no-cost extensions based on spending patterns'] },
+      multi:   { s:1, why:'Processing grant documents and award packages', cases:['Extract key terms and deliverables from a complex federal award document','Analyze scanned institutional forms that predate digital systems'] },
+    }
+  },
+  { dept:'_sep' },
+  {
+    dept: 'Operations', role: 'Facilities & Space', sub: 'Operations',
+    cells: {
+      conv:    { s:1, why:'Stakeholder communication support for space negotiations', cases:['Help a planner prepare for a difficult conversation with a department about a space reassignment','Generate questions to ask departments to surface unstated needs before a planning process'] },
+      langgen: { s:2, why:'Space decisions require nuanced communications that acknowledge competing interests', cases:['Draft a space reassignment communication that is honest and minimizes conflict','Generate a stakeholder briefing that articulates space tradeoffs without taking sides'] },
+      synth:   { s:2, why:'Synthesizing utilization data and stakeholder feedback into strategy requires interpretive reasoning', cases:['Synthesize utilization data and department feedback into a space strategy recommendation narrative','Distill competing department space requests into a prioritized recommendation with rationale'] },
+      auto:    { s:1, why:'Space booking and maintenance workflow integration', cases:['Automated utilization reporting triggered by booking system data','Agent that monitors maintenance request queues and prioritizes by urgency and impact'] },
+      rag:     { s:1, why:'Space policy and building inventory retrieval', cases:['Answer a nuanced question about space assignment policy from actual institutional guidelines','Surface relevant building standards for a specific renovation or use-change request'] },
+      pred:    { s:2, why:'Space demand forecasting and utilization optimization are core facilities analytics use cases', cases:['Predict department space demand based on headcount and program growth projections','Model utilization scenarios under different hybrid work and instruction policy assumptions'] },
+      multi:   { s:1, why:'Processing facility documents and floor plans', cases:['Extract room attributes from scanned legacy floor plan documents','Analyze facility inspection photos to generate structured condition reports'] },
+    }
+  },
+  {
+    dept: 'Operations', role: 'Comms & Marketing', sub: 'Operations',
+    cells: {
+      conv:    { s:1, why:'Content strategy dialogue and audience analysis', cases:['Interactive content strategy partner for a campaign targeting a specific audience segment','Help a communicator anticipate how a specific message will land with faculty vs. students'] },
+      langgen: { s:2, why:'Audience-specific content requires genuine interpretation of voice, context, and reader intent', cases:['Draft audience-specific versions of the same announcement for faculty, students, and parents','Rewrite a program page to speak to a prospective student\'s actual decision-making concerns'] },
+      synth:   { s:2, why:'Synthesizing community feedback and engagement data into actionable communication strategy', cases:['Synthesize alumni survey open-ends into a narrative about what the community values and needs','Identify themes in social media engagement data to inform content strategy'] },
+      auto:    { s:1, why:'Content publishing and campaign workflows', cases:['Automated social media post scheduling with AI-generated variations for A/B testing','Content workflow that triggers a drafting task when a news event is detected'] },
+      rag:     { s:1, why:'Brand standards and institutional content retrieval', cases:['Retrieve applicable brand guidelines and prior messaging when drafting a campaign','Surface relevant institutional data points when drafting a research impact story'] },
+      pred:    { s:1, why:'Audience engagement and campaign performance modeling', cases:['Predict email open rates by audience segment and optimize send timing','Model campaign reach and impact for different channel and budget combinations'] },
+      multi:   { s:2, why:'Image, video, and media analysis for content production', cases:['Generate accessibility-compliant captions for institutional video content','Analyze engagement patterns across visual content to inform creative direction'] },
+    }
+  },
+];
+
+const table = document.getElementById('matrix');
+
+// Build header row
+let headerHTML = '<thead><tr>';
+headerHTML += `<th class="corner" scope="rowgroup"><div class="corner-label"><span class="down">↓ Role</span><span class="across">→ Modality</span></div></th>`;
+MODALITIES.forEach((m, mi) => {
+  headerHTML += `<th class="col-header" id="col-${mi}" scope="col" onclick="toggleCol(${mi})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCol(${mi});}">
+    <span class="modality-name">${m.name.replace(/\n/,'<br>')}</span>
+    <span class="modality-tag">${m.tag}</span>
+  </th>`;
+});
+headerHTML += '</tr></thead>';
+table.innerHTML = headerHTML;
+
+const cap = document.createElement('caption');
+cap.className = 'visually-hidden';
+cap.textContent = 'AI Modalities Matrix — University roles versus AI modality categories. Click row or column headers to highlight connections. Click a filled cell to open use case details.';
+table.insertBefore(cap, table.firstChild);
+
+
+// Build body
+const tbody = document.createElement('tbody');
+
+ROLES.forEach((role, ri) => {
+  const tr = document.createElement('tr');
+
+  if (role.dept === '_sep') {
+    tr.className = 'dept-sep';
+    tr.innerHTML = `<td colspan="${MODALITIES.length + 1}"></td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  tr.setAttribute('data-dept', role.dept);
+  tr.setAttribute('data-ri', ri);
+
+  tr.innerHTML = `<th class="row-header" id="row-${ri}" scope="row" onclick="toggleRow(${ri})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRow(${ri});}">
+    <span class="role-name">${role.role}</span>
+    <span class="role-dept">${role.sub}</span>
+  </th>`;
+
+  MODALITIES.forEach((m, mi) => {
+    const cell = role.cells[m.id] || { s: 0, why: '', cases: [] };
+    const td = document.createElement('td');
+    td.className = 'cell';
+    td.setAttribute('data-ri', ri);
+    td.setAttribute('data-mi', mi);
+    td.setAttribute('data-outcome', m.outcome || '');
+    
+    // Build strength label
+    let strengthLabel = '';
+    if (cell.s === 2) strengthLabel = 'Primary fit';
+    else if (cell.s === 1) strengthLabel = 'Secondary fit';
+    else strengthLabel = 'Not applicable';
+    
+    // Build innerHTML with visually-hidden strength text
+    let cellHTML = `<div class="cell-inner strength-${cell.s}">${cell.s > 0 ? '<div class="dot"></div>' : ''}<span class="visually-hidden">${strengthLabel}</span></div>`;
+    td.innerHTML = cellHTML;
+
+    if (cell.s > 0) {
+      td.setAttribute('tabindex', '0');
+      td.setAttribute('role', 'button');
+      td.setAttribute('aria-label', `${role.role}, ${m.name.replace(/\n/,' ')}: ${strengthLabel}`);
+      td.addEventListener('mouseenter', (e) => showTooltip(e, role, m, cell));
+      td.addEventListener('mouseleave', () => hideTooltip());
+      td.addEventListener('click', () => openPanel(role, m, cell));
+      td.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openPanel(role, m, cell);
+        }
+      });
+      td.style.cursor = 'pointer';
+    } else {
+      td.setAttribute('aria-label', `${role.role}, ${m.name.replace(/\n/,' ')}: Not applicable`);
+    }
+    tr.appendChild(td);
+  });
+
+  tbody.appendChild(tr);
+});
+
+table.appendChild(tbody);
+
+// Highlight state
+let activeCol = null, activeRow = null, activeDept = null, activeOutcome = null;
+
+function clearAll() {
+  activeCol = null; activeRow = null; activeDept = null; activeOutcome = null;
+  document.querySelectorAll('.cell').forEach(c => { c.classList.remove('dimmed','highlighted'); });
+  document.querySelectorAll('.col-header').forEach(c => c.classList.remove('col-hl'));
+  document.querySelectorAll('.row-header').forEach(r => r.classList.remove('row-hl'));
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  document.querySelectorAll('.outcome-filter-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+}
+
+function toggleCol(mi) {
+  if (activeCol === mi) { clearAll(); return; }
+  clearAll();
+  activeCol = mi;
+  document.getElementById(`col-${mi}`).classList.add('col-hl');
+  document.querySelectorAll('.cell').forEach(c => {
+    const cmi = parseInt(c.getAttribute('data-mi'));
+    if (cmi === mi) c.classList.add('highlighted');
+    else c.classList.add('dimmed');
+  });
+}
+
+function toggleRow(ri) {
+  if (activeRow === ri) { clearAll(); return; }
+  clearAll();
+  activeRow = ri;
+  document.getElementById(`row-${ri}`).classList.add('row-hl');
+  document.querySelectorAll('.cell').forEach(c => {
+    const cri = parseInt(c.getAttribute('data-ri'));
+    if (cri === ri) c.classList.add('highlighted');
+    else c.classList.add('dimmed');
+  });
+}
+
+function filterDept(dept) {
+  if (activeDept === dept) { clearAll(); return; }
+  clearAll();
+  activeDept = dept;
+  const button = document.querySelector(`.filter-btn[onclick*="${dept}"]`) || Array.from(document.querySelectorAll('.filter-btn')).find(b => b.textContent === dept);
+  if (button) button.setAttribute('aria-pressed', 'true');
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    if (b.textContent === dept) b.setAttribute('aria-pressed', 'true');
+    else b.setAttribute('aria-pressed', 'false');
+  });
+  document.querySelectorAll('tr[data-dept]').forEach(row => {
+    const cells = row.querySelectorAll('.cell');
+    if (row.getAttribute('data-dept') !== dept) {
+      cells.forEach(c => c.classList.add('dimmed'));
+    } else {
+      cells.forEach(c => { c.classList.add('highlighted'); });
+    }
+  });
+}
+
+function filterOutcome(outcome) {
+  if (activeOutcome === outcome) { clearAll(); return; }
+  clearAll();
+  activeOutcome = outcome;
+  document.querySelectorAll('.outcome-filter-btn').forEach(b => {
+    if (b.getAttribute('onclick').includes("'" + outcome + "'")) {
+      b.classList.add('active'); b.setAttribute('aria-pressed', 'true');
+    }
+  });
+  document.querySelectorAll('.cell').forEach(c => {
+    c.getAttribute('data-outcome') === outcome ? c.classList.add('highlighted') : c.classList.add('dimmed');
+  });
+  MODALITIES.forEach((m, mi) => {
+    const col = document.getElementById('col-' + mi);
+    if (col) m.outcome === outcome ? col.classList.add('col-hl') : col.classList.remove('col-hl');
+  });
+}
+
+// Tooltip
+const tooltip = document.getElementById('tooltip');
+function outcomeTag(mod) {
+  if (!mod.outcome) return '';
+  return `<span class="outcome-tag outcome-${mod.outcome}">${OUTCOME_LABELS[mod.outcome]}</span>`;
+}
+function showTooltip(e, role, mod, cell) {
+  document.getElementById('tt-role').textContent = role.role + ' · ' + role.sub;
+  document.getElementById('tt-modality').textContent = mod.name.replace(/\n/,' ');
+  const sEl = document.getElementById('tt-strength');
+  sEl.textContent = cell.s === 2 ? 'Primary fit' : 'Secondary / emerging';
+  sEl.className = 'tt-strength s' + cell.s;
+  document.getElementById('tt-why').textContent = cell.why;
+  document.getElementById('tt-list').innerHTML = outcomeTag(mod) + cell.cases.map(c => `<li>${c}</li>`).join('');
+  tooltip.classList.add('show');
+  positionTooltip(e);
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+function positionTooltip(e) {
+  let x = e.clientX + 16, y = e.clientY - 10;
+  if (x + 340 > window.innerWidth) x = e.clientX - 340;
+  if (y + 220 > window.innerHeight) y = e.clientY - 220;
+  tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+}
+document.addEventListener('mousemove', e => { if (tooltip.classList.contains('show')) positionTooltip(e); });
+
+// Side panel
+const panel = document.getElementById('info-panel');
+function openPanel(role, mod, cell) {
+  hideTooltip();
+  document.getElementById('panel-title').textContent = role.role;
+  document.getElementById('panel-sub').textContent = mod.name.replace(/\n/,' ') + ' · ' + (cell.s === 2 ? 'Primary fit' : 'Secondary / emerging use');
+
+  let html = '';
+
+  // All modalities for this role
+  html += `<div class="panel-section"><div class="panel-section-title">All applicable modalities</div><div>`;
+  MODALITIES.forEach(m => {
+    const c = role.cells[m.id];
+    if (c && c.s > 0) {
+      html += `<span class="modality-pill s${c.s}">${m.name.replace(/\n/,' ')}</span>`;
+    }
+  });
+  html += `</div></div>`;
+
+  // Use cases for this specific cell
+  html += `<div class="panel-section"><div class="panel-section-title">Use cases: ${mod.name.replace(/\n/,' ')}</div>`;
+  html += `<div style="font-size:10px;color:#777;margin-bottom:10px;font-style:italic">${cell.why}</div>`;
+  cell.cases.forEach(c => {
+    html += `<div class="use-case-item"><span class="outcome-tag outcome-${mod.outcome}">${OUTCOME_LABELS[mod.outcome]||''}</span><div class="uc-mod">${mod.name.replace(/\n/,' ')}</div>${c}</div>`;
+  });
+  html += `</div>`;
+
+  // All use cases for this role
+  html += `<div class="panel-section"><div class="panel-section-title">All use cases for ${role.role}</div>`;
+  MODALITIES.forEach(m => {
+    const c = role.cells[m.id];
+    if (c && c.s > 0 && c.cases.length > 0) {
+      c.cases.forEach(uc => {
+        html += `<div class="use-case-item"><span class="outcome-tag outcome-${m.outcome}">${OUTCOME_LABELS[m.outcome]||''}</span><div class="uc-mod">${m.name.replace(/\n/,' ')}</div>${uc}</div>`;
+      });
+    }
+  });
+  html += `</div>`;
+
+  document.getElementById('panel-content').innerHTML = html;
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  lastFocused = document.activeElement;
+  panel.querySelector('.close-panel').focus();
+}
+let lastFocused = null;
+
+function closePanel() {
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+  if (lastFocused) lastFocused.focus();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+});
+</script>
+</main>
+</body>
+</html>

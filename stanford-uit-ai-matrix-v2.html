@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stanford UIT — AI Modalities Matrix</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:#f7f4ef;--ink:#1c1917;--ink-mid:#44403c;--ink-light:#726b66;--rule:#e2ddd6;
+    --accent:#8c1515;--accent-light:#fdf2f2;--cell-2:#8c1515;--cell-1:#f4b8b8;--cell-0:#eeebe5;
+    --col-hl:#fdf2f2;--row-hl:#fdf2f2;--white:#ffffff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  .skip-link{position:absolute;top:-100px;left:16px;background:#1c1917;color:#fff;padding:8px 16px;border-radius:4px;font-size:0.875rem;text-decoration:none;z-index:9999;transition:top 0.2s;}
+  .skip-link:focus{top:16px;}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  body{background:var(--bg);font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh;overflow-x:hidden;}
+  header{padding:28px 40px 18px;border-bottom:2px solid var(--ink);display:flex;align-items:flex-end;justify-content:space-between;gap:24px;background:var(--white);}
+  .header-left{display:flex;align-items:flex-end;gap:20px;}
+  .stanford-bar{width:6px;height:60px;background:var(--accent);border-radius:3px;flex-shrink:0;}
+  header h1{font-family:'Fraunces',serif;font-size:24px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-0.4px;}
+  header h1 em{font-weight:300;font-size:18px;font-style:italic;display:block;color:var(--ink-mid);margin-top:2px;}
+  header p{font-size:10.5px;color:var(--ink-light);max-width:380px;line-height:1.65;}
+  .legend{display:flex;gap:24px;padding:10px 40px;border-bottom:1px solid var(--rule);align-items:center;flex-wrap:wrap;background:var(--white);}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--ink-light);}
+  .legend-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+  .dot-primary{background:var(--accent);}
+  .dot-secondary{background:var(--cell-1);border:1px solid #e8a0a0;}
+  .dot-none{background:var(--cell-0);border:1px solid var(--rule);}
+  .legend-note{margin-left:auto;font-size:10px;color:var(--ink-light);font-style:italic;}
+  .controls{padding:10px 40px;border-bottom:1px solid var(--rule);display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg);}
+  .controls span{font-size:10px;color:var(--ink-light);margin-right:4px;}
+  .filter-btn{font-family:'DM Mono',monospace;font-size:10px;padding:5px 13px;border-radius:20px;border:1.5px solid var(--rule);background:var(--white);color:var(--ink-mid);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+  .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+  .clear-btn{font-family:'DM Mono',monospace;font-size:10px;padding:5px 14px;border-radius:20px;border:1.5px solid var(--ink);background:var(--ink);color:var(--white);cursor:pointer;margin-left:8px;transition:all 0.15s;}
+  .clear-btn:hover{background:var(--accent);border-color:var(--accent);}
+  .matrix-wrap{overflow:auto;padding:0 40px 60px;}
+  table{border-collapse:separate;border-spacing:0;min-width:900px;}
+  .corner{position:sticky;top:0;left:0;z-index:10;background:var(--bg);padding:14px 16px 10px;vertical-align:bottom;border-bottom:2px solid var(--ink);border-right:1.5px solid var(--rule);}
+  .corner-label{font-size:9px;color:var(--ink-light);letter-spacing:0.5px;text-transform:uppercase;line-height:1.5;}
+  th.col-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 5px 8px;text-align:center;vertical-align:bottom;border-bottom:2px solid var(--ink);min-width:90px;max-width:105px;cursor:pointer;transition:background 0.15s;}
+  th.col-header:hover,th.col-header.col-hl{background:var(--col-hl);}
+  th.col-header.focus-context{background:var(--col-hl);}
+  th.col-header .modality-name{font-family:'Fraunces',serif;font-size:11px;font-weight:600;color:var(--ink);line-height:1.3;display:block;margin-bottom:5px;}
+  th.col-header .modality-tag{display:inline-block;font-size:8.5px;padding:2px 7px;border-radius:10px;background:var(--rule);color:var(--ink-light);letter-spacing:0.3px;}
+  th.col-header.col-hl .modality-tag{background:var(--accent);color:#fff;}
+  th.row-header{position:sticky;left:0;z-index:4;background:var(--bg);padding:9px 16px 9px 0;text-align:right;vertical-align:middle;border-right:1.5px solid var(--rule);white-space:nowrap;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--rule);}
+  th.row-header:hover,th.row-header.row-hl{background:var(--row-hl);}
+  th.row-header.focus-context{background:var(--row-hl);}
+  th.row-header .role-name{font-family:'Fraunces',serif;font-size:12.5px;font-weight:600;color:var(--ink);display:block;}
+  th.row-header .role-dept{font-size:9px;color:var(--ink-light);display:block;margin-top:1px;}
+  .dept-label-row th{background:var(--ink)!important;color:var(--white)!important;font-family:'Fraunces',serif!important;font-size:10px!important;font-weight:600!important;letter-spacing:0.8px!important;text-transform:uppercase!important;padding:6px 14px 6px 0!important;text-align:right!important;vertical-align:middle!important;border:none!important;white-space:nowrap!important;cursor:default!important;}
+  .dept-label-row td{background:var(--ink)!important;border:none!important;height:30px!important;}
+  td.cell{padding:5px;text-align:center;vertical-align:middle;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);transition:background 0.12s;}
+  .cell-inner{width:54px;height:30px;border-radius:4px;margin:auto;display:flex;align-items:center;justify-content:center;transition:all 0.15s;position:relative;}
+  .cell-inner.strength-2{background:var(--cell-2);}
+  .cell-inner.strength-1{background:var(--cell-1);border:1px solid #e8a0a0;}
+  .cell-inner.strength-0{background:var(--cell-0);}
+  td.cell:hover .cell-inner{transform:scale(1.1);box-shadow:0 2px 8px rgba(140,21,21,0.25);}
+  td.cell.dimmed .cell-inner{opacity:0.12;}
+  td.cell.highlighted .cell-inner.strength-2{box-shadow:0 0 0 2px var(--accent);}
+  td.cell.highlighted .cell-inner.strength-1{box-shadow:0 0 0 2px #e8a0a0;}
+  .cell-inner .dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.8);}
+  .cell-inner.strength-1 .dot{background:rgba(140,21,21,0.5);}
+  #tooltip{position:fixed;z-index:1000;background:var(--white);border:1.5px solid var(--rule);border-radius:10px;padding:14px 18px;max-width:320px;pointer-events:none;opacity:0;transition:opacity 0.12s;box-shadow:0 8px 32px rgba(28,25,23,0.12);}
+  #tooltip.show{opacity:1;}
+  #tooltip .tt-role{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-light);margin-bottom:2px;}
+  #tooltip .tt-modality{font-family:'Fraunces',serif;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  #tooltip .tt-strength{display:inline-block;font-size:9.5px;padding:2px 8px;border-radius:10px;margin-bottom:10px;}
+  #tooltip .tt-strength.s2{background:var(--accent);color:#fff;}
+  #tooltip .tt-strength.s1{background:var(--cell-1);color:var(--ink);border:1px solid #e8a0a0;}
+  #tooltip .tt-why{font-size:10.5px;color:#555;line-height:1.6;margin-bottom:8px;border-top:1px solid var(--rule);padding-top:8px;}
+  #tooltip ul{list-style:none;}
+  #tooltip ul li{font-size:10px;color:var(--ink);padding:3px 0;border-bottom:1px solid #f5f0eb;line-height:1.55;}
+  #tooltip ul li:last-child{border:none;}
+  #tooltip ul li::before{content:"→ ";color:var(--accent);font-weight:700;}
+  #info-panel{position:fixed;right:0;top:0;bottom:0;width:350px;background:var(--white);border-left:1.5px solid var(--rule);padding:24px;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.16,1,0.3,1);z-index:50;box-shadow:-4px 0 24px rgba(28,25,23,0.08);}
+  #info-panel.open{transform:translateX(0);}
+  #info-panel h3{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+  #info-panel .panel-sub{font-size:10px;color:var(--ink-light);margin-bottom:16px;}
+  #info-panel .panel-section{margin-bottom:18px;}
+  #info-panel .panel-section-title{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-light);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--rule);}
+  #info-panel .modality-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;margin:3px;font-size:10px;}
+  #info-panel .modality-pill.s2{background:var(--accent);color:#fff;}
+  #info-panel .modality-pill.s1{background:var(--cell-1);color:var(--ink);border:1px solid #e8a0a0;}
+  .close-panel{position:absolute;top:16px;right:16px;background:none;border:1.5px solid var(--rule);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:13px;color:var(--ink-light);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+  .close-panel:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .use-case-item{padding:8px 10px;border-radius:6px;background:var(--bg);margin-bottom:6px;font-size:10px;line-height:1.55;color:var(--ink);border-left:3px solid var(--accent);}
+  .use-case-item .uc-mod{font-size:9px;color:var(--ink-light);margin-bottom:2px;}
+  .outcome-tag{display:inline-block;font-size:8px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:2px 7px;border-radius:10px;margin-bottom:5px;}
+  .outcome-time{background:#f5f0eb;color:#7f7776;}
+  .outcome-capacity{background:#eef6f8;color:#007c92;}
+  .outcome-new{background:#fdf2f2;color:#8c1515;}
+  #tooltip .outcome-tag{font-size:8px;margin-bottom:6px;display:inline-block;}
+
+  .outcome-controls{padding:8px 40px 10px;border-bottom:1px solid var(--rule);display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg);}
+  .outcome-controls span{font-size:10px;color:var(--ink-light);margin-right:4px;}
+  .outcome-filter-btn{font-family:'DM Mono',monospace;font-size:10px;padding:5px 13px;border-radius:20px;border:1.5px solid var(--rule);background:var(--white);cursor:pointer;transition:all 0.15s;white-space:nowrap;font-weight:700;letter-spacing:0.3px;}
+  .outcome-filter-btn.of-time{color:#7f7776;border-color:#c8c2bc;}
+  .outcome-filter-btn.of-time:hover,.outcome-filter-btn.of-time.active{background:#f5f0eb;border-color:#7f7776;color:#7f7776;}
+  .outcome-filter-btn.of-capacity{color:#007c92;border-color:#99ccd4;}
+  .outcome-filter-btn.of-capacity:hover,.outcome-filter-btn.of-capacity.active{background:#eef6f8;border-color:#007c92;color:#007c92;}
+  .outcome-filter-btn.of-new{color:#8c1515;border-color:#d88080;}
+  .outcome-filter-btn.of-new:hover,.outcome-filter-btn.of-new.active{background:#fdf2f2;border-color:#8c1515;color:#8c1515;}
+  .filter-btn:focus-visible,.clear-btn:focus-visible,td.cell:focus-visible,th.col-header:focus-visible,th.row-header:focus-visible,.close-panel:focus-visible{outline:3px solid #8c1515;outline-offset:2px;}
+  #info-panel:focus{outline:none;}
+
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header role="banner">
+  <div class="header-left">
+    <div class="stanford-bar" aria-hidden="true"></div>
+    <div>
+      <h1>Stanford University IT<em>Team Functions × AI Modalities</em></h1>
+    </div>
+  </div>
+  <p>Use Tab to move through column headers, row headers, and interactive matrix cells. Press Enter or Space on a filled cell to open the use case panel. Filter by UIT unit using the buttons below.</p>
+</header>
+<main id="main-content">
+<div class="legend" role="note" aria-label="Matrix legend">
+  <div class="legend-item"><div class="legend-dot dot-primary"></div> Primary — strong, immediate fit</div>
+  <div class="legend-item"><div class="legend-dot dot-secondary"></div> Secondary — emerging or supporting use</div>
+  <div class="legend-item"><div class="legend-dot dot-none"></div> Not applicable</div>
+  <span class="legend-note">Tab through headers and cells · Activate a filled cell for use cases</span>
+</div>
+<div class="controls" role="group" aria-label="Filter by UIT unit">
+  <span>Filter by unit:</span>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('CXS')">Client Experience &amp; Solutions</button>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('ET')">Enterprise Technology</button>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('ISO')">Information Security</button>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('Infra')">IT Infrastructure</button>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('OCIO')">Office of the CIO</button>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('RC')">Research Computing</button>
+  <button class="filter-btn" aria-pressed="false" onclick="filterDept('FS')">Financial Services</button>
+  <button class="clear-btn" aria-label="Clear all filters" onclick="clearAll()">Clear</button>
+</div>
+<div class="outcome-controls" role="group" aria-label="Filter by outcome type">
+  <span>Filter by outcome:</span>
+  <button class="outcome-filter-btn of-time" aria-pressed="false" onclick="filterOutcome('time')">Time Saved</button>
+  <button class="outcome-filter-btn of-capacity" aria-pressed="false" onclick="filterOutcome('capacity')">Capacity Expanded</button>
+  <button class="outcome-filter-btn of-new" aria-pressed="false" onclick="filterOutcome('new')">New Capability Unlocked</button>
+</div>
+<p id="matrix-instructions" class="visually-hidden">Keyboard instructions: Use Tab to move through filter buttons, column headers, row headers, and interactive matrix cells. Press Enter or Space on an interactive matrix cell to open detailed use cases. Press Escape to close the details panel.</p>
+<div class="matrix-wrap"><table id="matrix" aria-describedby="matrix-instructions"></table></div>
+<div id="tooltip">
+  <div class="tt-role" id="tt-role"></div>
+  <div class="tt-modality" id="tt-modality"></div>
+  <div class="tt-strength" id="tt-strength"></div>
+  <div class="tt-why" id="tt-why"></div>
+  <ul id="tt-list"></ul>
+</div>
+<div id="info-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" aria-describedby="panel-sub" aria-hidden="true" inert>
+  <button class="close-panel" tabindex="-1" aria-label="Close panel" onclick="closePanel()">✕</button>
+  <h3 id="panel-title"></h3>
+  <div class="panel-sub" id="panel-sub"></div>
+  <div id="panel-content"></div>
+</div>
+<script>
+const MODALITIES=[
+  {id:'conv',    name:'Conversational\nAI',    tag:'Chat / Agents',       outcome:'time'},
+  {id:'langgen', name:'Language\nGeneration',  tag:'Drafting / Writing',  outcome:'time'},
+  {id:'synth',   name:'Synthesis &\nAnalysis', tag:'Summarization',       outcome:'capacity'},
+  {id:'auto',    name:'Intelligent\nAutomation',tag:'Agentic Workflows',  outcome:'capacity'},
+  {id:'rag',     name:'Retrieval &\nKnowledge',tag:'RAG / Search',        outcome:'time'},
+  {id:'pred',    name:'Predictive\nAnalytics', tag:'ML / Forecasting',    outcome:'new'},
+  {id:'multi',   name:'Multimodal\nAI',        tag:'Vision / Audio / Docs',outcome:'capacity'},
+];
+
+// Outcome label map
+const OUTCOME_LABELS={time:'Time Saved',capacity:'Capacity Expanded',new:'New Capability Unlocked'};
+
+const ROLES=[
+  // ═══════════════════════════════════════════════════════════
+  // CXS — ALL 15 TEAMS
+  // ═══════════════════════════════════════════════════════════
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'University Service Desk',sub:'CXS · 49,695 support calls/yr',
+   cells:{
+    conv:   {s:2,why:'High call and ticket volume with ambiguous, emotionally varied requests — templated responses break down constantly at this scale.',
+             cases:['AI tier-1 agent that interprets vague tickets ("my stuff is broken") and resolves or routes with full context','Conversational agent that handles password resets, VPN, two-step auth, and SUNetID issues without human involvement','Draft empathetic, technically accurate responses matched to each user\'s technical level and emotional tone']},
+    langgen:{s:2,why:'KB article generation and community-facing communications at 49K+ calls/year requires contextual, audience-aware writing at scale.',
+             cases:['Generate KB articles from clusters of resolved tickets — turning frontline knowledge into searchable documentation','Draft plain-language incident status updates for the Stanford community when services are degraded','Produce shift-handoff summaries that capture open issues and nuance, not just ticket counts']},
+    synth:  {s:2,why:'49,695 calls contain enormous signal — surfacing it requires genuine synthesis, not just dashboards.',
+             cases:['Synthesize weekly ticket themes into a narrative for CXS leadership identifying patterns automation hasn\'t caught','Identify emerging service issues before they become incidents by clustering language across open tickets','Produce a quarterly "voice of the user" report from unstructured ticket and call data']},
+    auto:   {s:2,why:'Agentic tier-1 resolution is the single highest-ROI automation target for a service desk at this volume.',
+             cases:['Agent that triages a ticket, attempts KB-guided resolution, and escalates with full context if unresolved','ServiceNow-integrated agent that handles account unlocks and access requests end-to-end','Workflow that detects a known incident pattern and auto-notifies affected users with a plain-language status update']},
+    rag:    {s:2,why:'KB retrieval grounded in Stanford-specific documentation is foundational — generic AI knowledge fails on Cardinal Key, SUNetID, Axess, etc.',
+             cases:['Surface the most relevant Stanford KB article when a ticket arrives, ranked by resolution history','Answer questions about Stanford-specific services from actual UIT documentation','Retrieve applicable SLA and escalation policy when a ticket exceeds thresholds']},
+    pred:   {s:1,why:'Volume forecasting to right-size staffing around semester cycles and planned changes.',
+             cases:['Predict ticket volume spikes around autumn quarter start, enrollment periods, and major system upgrades','Model staffing needs based on projected incident categories from planned infrastructure changes']},
+    multi:  {s:1,why:'Processing screenshots and error attachments to accelerate diagnosis.',
+             cases:['Interpret an error screenshot attached to a ticket to skip manual reproduction steps','Extract structured information from an uploaded photo of a physical device or error display']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'IT Operations Center (ITOC)',sub:'CXS · 24/7 Infrastructure Monitoring',
+   cells:{
+    conv:   {s:1,why:'Internal ops dialogue for incident triage and shift communication.',
+             cases:['On-call chatbot that helps night-shift staff navigate runbooks for unfamiliar incident types','Draft stakeholder communication during an active incident, updating in real time as new information arrives']},
+    langgen:{s:2,why:'Incident communications and post-incident reports require accurate, audience-appropriate narrative at high stakes.',
+             cases:['Draft incident status updates for the Stanford community at each stage of an outage — clear, calm, no jargon','Generate post-incident review reports from timeline logs, response notes, and lessons learned','Produce a monthly operational health narrative from system metrics and incident data for CXS leadership']},
+    synth:  {s:2,why:'Synthesizing signal across complex infrastructure — 22K Wi-Fi APs, data centers, core systems — requires interpretive reasoning.',
+             cases:['Synthesize monitoring alerts from Splunk and multiple systems into a single prioritized incident narrative for on-call staff','Identify recurring infrastructure patterns across monthly incident data to surface systemic problems','Produce a weekly operational digest that interprets trend data, not just lists events']},
+    auto:   {s:2,why:'Automated detection, alerting, and response orchestration are core ITOC functions.',
+             cases:['Agent that correlates alerts across Splunk, network monitoring, and service health tools into a unified incident view','Automated runbook execution for known incident types with human escalation at defined decision points','Trigger communications workflows automatically when a service threshold is breached']},
+    rag:    {s:2,why:'Runbook and procedure retrieval grounded in Stanford-specific operations documentation.',
+             cases:['Surface the correct runbook when a specific alert pattern is detected','Retrieve past incident records for a similar issue to inform the current response','Answer "what is the escalation path for X service" from actual ITOC documentation']},
+    pred:   {s:2,why:'Predictive alerting and capacity forecasting are high-value for 24/7 operations.',
+             cases:['Predict infrastructure stress events before they cause incidents using traffic and load patterns','Forecast maintenance windows where risk is lowest based on historical usage patterns','Early warning model for network saturation in specific buildings during high-demand periods']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Computer Resource Consulting (CRC)',sub:'CXS · 29,845 tickets/yr · On-site desktop & lab support',
+   cells:{
+    conv:   {s:1,why:'Technical consulting requires dialogue — AI augments routing and first-response rather than replacing the expert.',
+             cases:['Pre-screening chatbot that qualifies the nature of a consulting request before assignment to a specialist','AI first-response that handles routine software installation and configuration questions before CRC engagement']},
+    langgen:{s:2,why:'Contract support documentation and technical guidance materials require contextual, accurate generation.',
+             cases:['Draft scoped consulting engagement descriptions from initial client conversations','Generate technical how-to documentation from a consultant\'s verbal walkthrough of a solution','Produce client-facing project summaries that translate technical outcomes into plain-language value']},
+    synth:  {s:1,why:'Understanding patterns across 29,845 annual tickets to improve service and staff development.',
+             cases:['Synthesize recurring technical issues by department to identify systemic problems CRC can address proactively','Identify which departments are disproportionately burdened by specific device or software challenges']},
+    auto:   {s:1,why:'Workflow integration for ticket routing and follow-up at scale.',
+             cases:['Agent that routes consulting requests to the right specialist based on technology type and department context','Automate follow-up workflows — checking on open items, scheduling reviews, closing stale tickets']},
+    rag:    {s:2,why:'Institutional technical knowledge retrieval is the core productivity tool for field consultants.',
+             cases:['Surface relevant past resolutions and configurations from Stanford\'s institutional KB for a field consultant on-site','Retrieve applicable vendor documentation and Stanford-specific configuration standards for a consulting engagement','Answer "has this been done before and how" from CRC\'s historical project and ticket records']},
+    pred:   {s:0,why:'',cases:[]},
+    multi:  {s:1,why:'Processing technical documents and configuration files in the field.',
+             cases:['Analyze an uploaded network diagram or configuration file to accelerate a consulting engagement','Extract and structure requirements from an uploaded specification or scope document']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Endpoint Engineering &\nDevelopment (EED)',sub:'CXS · Jamf · BigFix · Stanford Mobile App · 46,193 endpoints',
+   cells:{
+    conv:   {s:1,why:'Developer and admin dialogue support for endpoint policy and configuration.',
+             cases:['Conversational assistant that helps a department IT admin understand and configure endpoint compliance requirements','AI guide for end users navigating device enrollment, MDM, or compliance remediation steps']},
+    langgen:{s:2,why:'Policy documentation, release notes, and technical communications for 46,193 managed endpoints require clear, contextual generation.',
+             cases:['Generate plain-language endpoint compliance guidance for non-technical staff from a policy specification','Draft release notes for a BigFix or Jamf policy update tailored to both IT admins and end users','Produce mobile app feature documentation and in-app help content from engineering specifications']},
+    synth:  {s:1,why:'Synthesizing compliance posture across 46,193 endpoints requires interpretive pattern analysis.',
+             cases:['Synthesize Jamf and BigFix compliance data across departments into a risk-stratified narrative for ISO','Identify patterns in endpoint non-compliance that indicate a systemic configuration or communication problem']},
+    auto:   {s:2,why:'Automated device compliance, patching, and mobile management workflows are EED\'s core function.',
+             cases:['Agent that detects a non-compliant endpoint, attempts automated remediation, and escalates with context if it cannot resolve','Automated patching pipeline that prioritizes CVEs based on severity and exposure, then deploys and verifies','Lifecycle agent that flags devices approaching end-of-support and initiates refresh planning workflows']},
+    rag:    {s:2,why:'Retrieval grounded in Stanford\'s specific endpoint standards, Jamf/BigFix configurations, and compliance policies.',
+             cases:['Surface the correct compliance standard and remediation path when a specific endpoint violation is detected','Answer "what is Stanford\'s approved configuration for X" from actual EED policy documentation','Retrieve applicable data security requirements when configuring a device for a researcher handling high-risk data']},
+    pred:   {s:2,why:'Predicting compliance drift and patch exposure across a large endpoint fleet is a high-value security use case.',
+             cases:['Model which endpoints are at highest risk of falling out of compliance before they trigger an alert','Forecast patch deployment success rates by device type and OS version to plan rollouts more accurately','Predict Stanford Mobile App usage growth to inform infrastructure and feature planning']},
+    multi:  {s:1,why:'Processing device images, screenshots, and configuration artifacts.',
+             cases:['Analyze an uploaded device screenshot to diagnose an enrollment or compliance issue remotely','Interpret configuration file contents to identify mismatches against Stanford standards']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Stanford Web Services (SWS)',sub:'CXS · 146 custom sites/yr · 1.3M pages scanned for a11y',
+   cells:{
+    conv:   {s:1,why:'Client consulting dialogue for web projects before and during engagement.',
+             cases:['AI project intake assistant that scopes a web request and surfaces requirements before a consultant engages','Chatbot for common web platform questions (Drupal, WordPress, Stanford Sites) that deflects routine support tickets']},
+    langgen:{s:2,why:'Content creation and web copywriting require contextual, audience-aware generation — not templates.',
+             cases:['Draft audience-specific web copy from a client\'s brief — writing differently for prospective students, faculty, and staff','Generate SEO-optimized content for department and program pages at scale','Write accessible image alt-text for the 1.3M pages under SWS management']},
+    synth:  {s:2,why:'Web health monitoring and accessibility analysis across 1.3M pages requires synthesizing data into actionable narrative.',
+             cases:['Synthesize web analytics and health monitoring data into a plain-language report for a non-technical department head','Identify systemic accessibility patterns across a department\'s web presence from automated scan data','Produce a quarterly web portfolio health report for SWS leadership']},
+    auto:   {s:2,why:'Automated accessibility scanning, remediation flagging, and deployment workflows at scale.',
+             cases:['Automated pipeline that scans new content for WCAG violations and generates a prioritized remediation brief','Agent that detects a broken web pattern across multiple sites and proposes a templated fix','Trigger content review workflows when a page hasn\'t been updated in over 12 months']},
+    rag:    {s:1,why:'Stanford brand, accessibility, and web standards retrieval for content and development work.',
+             cases:['Answer a developer\'s question about Stanford web standards from actual SWS documentation','Surface relevant brand and accessibility guidelines when generating copy for a department page']},
+    pred:   {s:1,why:'Web traffic and infrastructure demand forecasting.',
+             cases:['Predict traffic spikes during admissions, graduation, and major news events to proactively scale infrastructure','Model hosting capacity needs based on planned site launches and traffic growth trends']},
+    multi:  {s:2,why:'Image processing, accessibility remediation, and document analysis are core SWS functions.',
+             cases:['Auto-generate alt-text for images across the Stanford web portfolio','Analyze uploaded PDFs for accessibility compliance and generate a structured remediation checklist','Process design mockups and extract structural requirements for development scoping']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Technology Training',sub:'CXS · 5,134 learners/yr · Instructor-led & self-paced',
+   cells:{
+    conv:   {s:2,why:'Personalized learning support requires adaptive dialogue — static content cannot meet every learner where they are.',
+             cases:['AI learning assistant that answers follow-up questions after a session, context-aware to what was taught','Personalized skill-gap chatbot that identifies weaknesses and recommends the next training module','Office hours bot for Stanford-specific tools (Slack, Zoom, Google Workspace) handling nuanced how-to questions']},
+    langgen:{s:2,why:'Curriculum development at scale requires contextual, role-aware content generation.',
+             cases:['Generate training module content tailored to a specific role or department from a curriculum outline','Draft instructor guides that explain not just what to teach but how to handle common confusion points','Create assessment questions at varied difficulty levels from a course topic']},
+    synth:  {s:2,why:'Understanding learner needs and program outcomes requires synthesizing feedback and engagement data.',
+             cases:['Synthesize post-training survey responses into actionable curriculum improvement themes','Identify which topics consistently confuse learners based on question patterns and assessment results','Produce a semester training impact report connecting learning data to organizational capability outcomes']},
+    auto:   {s:1,why:'Enrollment, reminder, and completion workflows.',
+             cases:['Automated personalized training recommendations triggered by a new hire\'s role and system access profile','Workflow that detects a compliance training deadline approaching and generates targeted outreach to non-completers']},
+    rag:    {s:1,why:'Content retrieval for course design and just-in-time learning support.',
+             cases:['Surface relevant Stanford policies and documentation when developing compliance training content','Retrieve past course materials and learner feedback when redesigning an existing module']},
+    pred:   {s:1,why:'Demand forecasting for training programs.',
+             cases:['Predict enrollment demand by program and semester based on hiring, service launches, and UIT roadmap changes','Model which skills will be most needed given planned technology changes across Stanford']},
+    multi:  {s:2,why:'Creating and analyzing learning content at scale — including video and documents — is core to this team.',
+             cases:['Generate accessible captions and transcripts for training video content automatically','Analyze recorded training sessions to identify where learners disengage or lose comprehension','Process uploaded screen recordings to produce step-by-step how-to documentation']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Stanford Office of Digital\nAccessibility (SODA)',sub:'CXS · University a11y policy · Training & tools',
+   cells:{
+    conv:   {s:2,why:'Accessibility guidance requires contextual dialogue — policy application varies widely by content type, platform, and use case.',
+             cases:['Conversational accessibility consultant that helps a developer understand what WCAG requirement applies to their specific implementation','AI assistant that answers faculty questions about making course materials accessible — specific to their file type and LMS','Policy Q&A bot that interprets Stanford\'s digital accessibility standards for non-technical content creators']},
+    langgen:{s:2,why:'Accessibility remediation guidance and policy communications require clear, contextual language generation at scale.',
+             cases:['Draft a plain-language remediation plan for a department based on their specific accessibility audit findings','Generate accessible alternatives to non-compliant content — rewriting complex PDFs, drafting text alternatives for visual content','Produce training materials tailored to a specific audience (web developers vs. faculty vs. comms staff)']},
+    synth:  {s:2,why:'Synthesizing 1.3M+ scanned pages of accessibility data requires interpretive prioritization, not just counts.',
+             cases:['Synthesize campus-wide accessibility scan data into a risk-stratified report with remediation priorities for SODA leadership','Identify systemic accessibility failure patterns across Stanford\'s web estate and articulate the root cause','Produce an annual digital accessibility state-of-the-university report from audit, training, and compliance data']},
+    auto:   {s:2,why:'Automated accessibility checking, alt-text generation, and remediation workflows at scale.',
+             cases:['Automated pipeline that scans new Stanford web content for WCAG violations and generates prioritized remediation briefs','AI-powered alt-text generation for images across the Stanford web portfolio','Document accessibility remediation agent that converts non-compliant PDFs to accessible formats with human review checkpoints']},
+    rag:    {s:2,why:'WCAG, ADA/Section 508, and Stanford-specific policy retrieval grounded in actual standards is the foundation of SODA\'s advisory work.',
+             cases:['Answer a nuanced ADA Section 508 question from the actual legal standard and Stanford policy documents','Surface applicable WCAG 2.1 criteria for a specific content pattern a developer is asking about','Retrieve relevant precedent and guidance when evaluating an accessibility exception request']},
+    pred:   {s:1,why:'Forecasting compliance risk and prioritizing remediation investment.',
+             cases:['Predict which departments are at highest risk of accessibility non-compliance based on site age, traffic, and audit history','Model remediation effort and cost across the Stanford web estate to inform resource allocation']},
+    multi:  {s:2,why:'Processing visual, audio, and document content for accessibility assessment is SODA\'s core technical work.',
+             cases:['Analyze images, charts, and infographics to evaluate the quality of existing alt-text or generate replacements','Process uploaded course videos to assess caption quality and generate corrections','Evaluate uploaded PDFs for structural accessibility — heading hierarchy, reading order, form field labeling']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'CXS Account Team (CAT)',sub:'CXS · Client relationships · Dashboards · Decision support',
+   cells:{
+    conv:   {s:2,why:'Account management is fundamentally a dialogue — understanding client needs, interpreting feedback, and building shared context requires adaptive conversation.',
+             cases:['AI account briefing assistant that synthesizes a client\'s service history, open issues, and strategic context before a relationship meeting','Conversational intake for new client requests that surfaces underlying needs and constraints before solution design begins','Prep bot that anticipates a client\'s likely questions and concerns given their recent experience']},
+    langgen:{s:2,why:'Account communications and client dashboards require contextual, relationship-aware language generation.',
+             cases:['Draft a quarterly business review narrative for a specific client that connects their service metrics to their stated priorities','Generate a client-facing service impact report that explains UIT\'s value in the client\'s own language','Produce tailored recommendations from dashboard data — not just presenting numbers but explaining what they mean for this client']},
+    synth:  {s:2,why:'Synthesizing service performance data, client feedback, and relationship history into actionable insight is the core CAT function.',
+             cases:['Synthesize ticket data, satisfaction scores, and meeting notes into a client health assessment narrative','Identify at-risk client relationships by synthesizing service performance patterns and interaction history','Produce a portfolio-wide account health report for CXS leadership that surfaces systemic issues and bright spots']},
+    auto:   {s:1,why:'Automated account monitoring and insight generation workflows.',
+             cases:['Agent that monitors service metrics for each client account and flags anomalies for proactive account team outreach','Automated meeting prep briefs generated from ServiceNow data, prior meeting notes, and open action items']},
+    rag:    {s:1,why:'Account history and service documentation retrieval.',
+             cases:['Surface the full relationship history, open issues, and past commitments before a client engagement','Retrieve relevant UIT service catalog information when a client asks about a capability or option']},
+    pred:   {s:2,why:'Predicting client satisfaction and service demand is the foundation of proactive account management.',
+             cases:['Score client accounts by satisfaction risk based on ticket patterns, SLA performance, and interaction signals','Forecast service demand by client for resource planning and proactive capacity conversations']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Client Technology Solutions\n& Consulting (CTSC)',sub:'CXS · Non-enterprise cloud & on-premises server environments',
+   cells:{
+    conv:   {s:1,why:'Client architecture consulting requires dialogue to surface requirements and constraints.',
+             cases:['AI requirements analyst that engages a client to surface unstated technical needs and constraints before solution design','Conversational assistant that helps a department IT lead evaluate cloud vs. on-premises trade-offs for their specific use case']},
+    langgen:{s:2,why:'Architecture proposals and technical documentation require contextual, audience-aware generation.',
+             cases:['Draft a cloud architecture proposal from client requirements, including security and cost considerations specific to Stanford\'s environment','Generate plain-language documentation for a deployed environment from the engineer\'s technical configuration notes','Produce a client-facing project brief that explains technical outcomes and operational responsibilities clearly']},
+    synth:  {s:1,why:'Synthesizing the managed environment portfolio for capacity and risk planning.',
+             cases:['Synthesize utilization, security posture, and support burden across the non-enterprise cloud and server portfolio into a management brief','Identify environments approaching end-of-life or high operational risk for proactive remediation planning']},
+    auto:   {s:2,why:'Infrastructure deployment automation and operational workflow management are core CTSC engineering work.',
+             cases:['Infrastructure-as-code generation from a client\'s plain-language environment description','Agent that monitors managed environments for compliance drift and generates a prioritized remediation brief','Automated lifecycle workflows that flag environments approaching capacity, end-of-support, or cost thresholds']},
+    rag:    {s:2,why:'Stanford security, compliance, and architecture standards retrieval is foundational for every CTSC engagement.',
+             cases:['Surface applicable Stanford security standards when designing a new cloud environment','Retrieve relevant past architecture decisions for a similar department or use case','Answer "what are the approved cloud services and configurations at Stanford" from actual CTSC and ISO documentation']},
+    pred:   {s:2,why:'Cloud cost and capacity forecasting are core operational responsibilities.',
+             cases:['Forecast cloud cost growth by environment based on usage trends and planned changes','Model the cost impact of a proposed architecture change before client commitment','Predict storage and compute demand for a new research or departmental environment']},
+    multi:  {s:1,why:'Processing architecture diagrams and technical specifications.',
+             cases:['Analyze an uploaded architecture diagram to identify security gaps or cost optimization opportunities','Extract and structure requirements from a client\'s uploaded technical specification or RFP document']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Operator Services Center (OSC)',sub:'CXS · 13M+ calls/yr · University & Hospital phone lines',
+   cells:{
+    conv:   {s:2,why:'13 million calls a year of highly variable, time-sensitive routing requires intelligent conversational triage — not just menu trees.',
+             cases:['AI call routing agent that interprets a caller\'s plain-language request and routes to the right resource without a phone tree','Conversational emergency code assistance that guides a caller through a clinical code procedure accurately and calmly','Natural language directory assistance that handles ambiguous requests ("connect me to someone in cardiology who handles scheduling")']},
+    langgen:{s:1,why:'Operational documentation and staff communications.',
+             cases:['Draft OSC procedure documentation from a supervisor\'s verbal description of an updated routing protocol','Generate plain-language guidance for new OSC staff on handling complex or unusual call scenarios']},
+    synth:  {s:2,why:'Synthesizing patterns across 13M calls is the only way to identify systemic routing problems, training gaps, and service opportunities.',
+             cases:['Synthesize call pattern data into a narrative for OSC leadership — identifying routing failures, peak load issues, and caller confusion patterns','Identify which request types are most frequently misrouted to surface training or system improvement opportunities','Produce a monthly operational report that tells the story behind call volume trends']},
+    auto:   {s:2,why:'Automated call routing, dispatch, and escalation workflows at 13M call volume require AI-driven orchestration.',
+             cases:['AI-powered routing that interprets caller intent and context to reduce wrong transfers and call-backs','Automated emergency clinical code broadcast workflows triggered by verified OSC operator action','Intelligent callback scheduling when wait times exceed thresholds, rather than holding callers in queue']},
+    rag:    {s:2,why:'OSC operators need instant access to Stanford directory, routing, and clinical protocol information.',
+             cases:['Real-time directory lookup that surfaces the right person or resource from a caller\'s ambiguous description','Surface the correct clinical escalation protocol for a specific code or situation during a live call','Retrieve current on-call coverage for a department or clinical service on demand during routing']},
+    pred:   {s:2,why:'Volume forecasting at 13M calls is critical for staffing and resilience planning.',
+             cases:['Predict call volume spikes by hour, day, and season to optimize OSC staffing levels','Forecast which routing destinations will be most in demand during specific events or academic calendar moments','Model the call volume impact of a Stanford Medicine service change or campus-wide event']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Stanford University Hardware\nProgram (SUHP)',sub:'CXS · 45,279 IDs issued · Procurement · Refresh planning',
+   cells:{
+    conv:   {s:1,why:'Procurement guidance and hardware recommendation require contextual dialogue.',
+             cases:['AI procurement assistant that recommends the right hardware configuration for a researcher\'s or staff member\'s specific workload','Conversational guide through the SUHP ordering process, including approvals, bundles, and delivery timelines']},
+    langgen:{s:1,why:'Procurement communications and refresh planning documents.',
+             cases:['Draft department refresh planning proposals that justify hardware investment in terms of productivity and compliance outcomes','Generate plain-language communication for a department head about upcoming device refresh timelines and options']},
+    synth:  {s:2,why:'Managing procurement and refresh across the Stanford fleet requires synthesizing inventory, budget, and demand data.',
+             cases:['Synthesize device inventory, age, and usage data into a refresh priority narrative for budget planning','Identify departments with high concentrations of aging hardware to proactively prioritize refresh outreach','Produce a sustainability report on hardware retirement practices and environmental outcomes']},
+    auto:   {s:1,why:'Procurement workflow and lifecycle management automation.',
+             cases:['Automated refresh alerts with AI-generated cost-benefit summaries when devices approach end-of-life','Order fulfillment tracking agent that proactively communicates status to departments and flags delays']},
+    rag:    {s:1,why:'Product catalog and procurement policy retrieval.',
+             cases:['Surface the currently approved hardware bundles and configurations for a specific use case','Retrieve relevant procurement policy when a department asks about a non-standard hardware request']},
+    pred:   {s:2,why:'Demand forecasting for a large hardware procurement program is a genuine ML use case.',
+             cases:['Forecast hardware demand by department and device type for the next fiscal year to inform vendor negotiations','Predict which device models will have the highest support burden based on failure rates and age']},
+    multi:  {s:1,why:'Processing device images and specifications.',
+             cases:['Analyze a photo of a damaged device to assess repair vs. replace decision support','Extract and structure specifications from vendor product sheets for catalog management']},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Cardinal Print',sub:'CXS · Managed print · Secure printing · Sustainability',
+   cells:{
+    conv:   {s:1,why:'User support dialogue for print configuration and troubleshooting.',
+             cases:['Conversational troubleshooting assistant for common print issues before a service ticket is opened','AI guide that walks a new user through secure print setup and follow-me printing configuration']},
+    langgen:{s:1,why:'Service communications and sustainability reporting.',
+             cases:['Draft a department-facing communication explaining changes to print quotas or policy','Generate a sustainability impact report on paper and toner usage reduction across managed print locations']},
+    synth:  {s:1,why:'Fleet utilization and sustainability data synthesis.',
+             cases:['Synthesize print usage data across departments into a sustainability narrative for leadership reporting','Identify underutilized or overloaded print devices to optimize fleet placement and reduce costs']},
+    auto:   {s:1,why:'Supply ordering and maintenance dispatch workflows.',
+             cases:['Automated toner replenishment triggered by device consumption data before users notice an outage','Maintenance dispatch agent that detects device errors and creates a service ticket with full diagnostic context']},
+    rag:    {s:0,why:'',cases:[]},
+    pred:   {s:1,why:'Print demand forecasting for fleet planning.',
+             cases:['Predict print volume by location and device to optimize fleet placement and capacity','Forecast supply consumption to improve just-in-time replenishment and reduce waste']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Mobile Services',sub:'CXS · Cellular provisioning · Device ordering · Travel loaners',
+   cells:{
+    conv:   {s:1,why:'Provisioning guidance and plan selection require contextual dialogue.',
+             cases:['AI assistant that helps a staff member select the right mobile plan for their role and usage pattern','Conversational guide through the device activation and transfer process for new Stanford mobile subscribers']},
+    langgen:{s:1,why:'Service communications and policy documentation.',
+             cases:['Draft plain-language communications about carrier or plan changes affecting Stanford subscribers','Generate device recycling and sustainability guidance tailored to departing employees or students']},
+    synth:  {s:1,why:'Fleet and usage data synthesis for cost management.',
+             cases:['Synthesize usage patterns across the Stanford mobile fleet to identify cost optimization opportunities','Identify lines with persistently low usage for proactive plan right-sizing or deactivation']},
+    auto:   {s:1,why:'Provisioning and lifecycle management workflows.',
+             cases:['Automated provisioning workflow triggered by HR system events (new hire, departure, role change)','Travel loaner reservation and return tracking agent that handles booking confirmations and overdue alerts']},
+    rag:    {s:0,why:'',cases:[]},
+    pred:   {s:1,why:'Usage and demand forecasting for device and plan inventory.',
+             cases:['Forecast mobile device demand by quarter for inventory planning and carrier negotiation','Predict which plans will exceed data caps to enable proactive outreach before overage charges']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Paging Services',sub:'CXS · Spok Mobile · Secure clinical messaging',
+   cells:{
+    conv:   {s:1,why:'User setup support and troubleshooting.',
+             cases:['AI setup guide that walks a clinical user through Spok Mobile configuration for secure paging','Troubleshooting assistant for common paging delivery and device issues before a ticket is opened']},
+    langgen:{s:1,why:'Compliance documentation and service communications.',
+             cases:['Draft HIPAA-compliant service documentation for clinical paging policy and usage guidelines','Generate plain-language training materials for clinical staff on secure messaging compliance requirements']},
+    synth:  {s:0,why:'',cases:[]},
+    auto:   {s:1,why:'Message delivery monitoring and compliance workflow automation.',
+             cases:['Automated delivery failure alerts with AI-generated triage summaries for the paging operations team','Compliance monitoring agent that flags message delivery anomalies for clinical safety review']},
+    rag:    {s:1,why:'Clinical messaging compliance policy retrieval.',
+             cases:['Surface applicable HIPAA and Stanford clinical messaging policy when a compliance question arises','Retrieve relevant escalation protocol when a paging delivery failure involves a critical clinical alert']},
+    pred:   {s:0,why:'',cases:[]},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'Video, Access Control &\nCard Services (VACCS)',sub:'CXS · 45,279 IDs issued · Door readers · Video surveillance',
+   cells:{
+    conv:   {s:1,why:'Access request guidance and issue resolution.',
+             cases:['AI assistant that guides a department through requesting building access changes for a new employee or space change','Troubleshooting chatbot for common ID card issues (not working at a reader, lost card, activation problems)']},
+    langgen:{s:1,why:'Access policy communications and documentation.',
+             cases:['Draft a plain-language communication for a department about upcoming access control changes in their building','Generate an access audit report narrative from raw door-reader log data for a security review']},
+    synth:  {s:2,why:'Synthesizing access patterns, camera coverage, and incident data requires interpretive analysis for security and planning.',
+             cases:['Synthesize door-reader access patterns and camera alert data into a security incident narrative for ISO review','Identify unusual access patterns across campus buildings that warrant investigation before an incident occurs','Produce a quarterly physical security posture report from access, video, and incident data']},
+    auto:   {s:2,why:'Automated access provisioning, monitoring, and anomaly alerting are high-value for a large physical security operation.',
+             cases:['Agent that detects anomalous card access patterns (after-hours, high-frequency, unusual locations) and generates an alert with context','Automated access provisioning and deprovisioning triggered by HR system events (new hire, departure, space change)','Workflow that monitors video surveillance alerts and triages them for operator review based on severity signals']},
+    rag:    {s:1,why:'Access policy and physical security standards retrieval.',
+             cases:['Surface applicable Stanford physical access policy when evaluating an unusual access request','Retrieve building access standards and approval requirements for a specific space or security zone']},
+    pred:   {s:2,why:'Physical access pattern prediction is a genuine security analytics use case at Stanford\'s campus scale.',
+             cases:['Predict which access credential patterns are associated with elevated security risk based on historical incident data','Forecast ID card issuance demand by semester for VACCS staffing and inventory planning','Model the access impact of a planned building renovation or space reassignment']},
+    multi:  {s:2,why:'Video analysis and ID document processing are core VACCS technical functions.',
+             cases:['AI-assisted video review that surfaces relevant footage from a large archive for a specific incident investigation','Process uploaded identity documents during ID card issuance to extract and verify data accurately','Analyze camera coverage maps to identify physical security blind spots in a building or zone']},
+  }},
+
+  {dept:'CXS',deptLabel:'Client Experience & Solutions',role:'ITSM Program',sub:'CXS · UIT-wide IT Service Management · ServiceNow platform',
+   cells:{
+    conv:   {s:1,why:'ITSM guidance requires contextual dialogue — policy and process questions vary widely by team and situation.',
+             cases:['Conversational ServiceNow assistant that helps a UIT team member understand the correct process for a specific request type','AI guide that walks a new UIT staff member through ITSM workflows — incident vs. request vs. change — with Stanford-specific examples']},
+    langgen:{s:2,why:'ITSM process documentation, change advisory board materials, and service design artifacts require contextual, accurate generation at scale.',
+             cases:['Draft a change request record and risk assessment from an engineer\'s plain-language description of a planned change','Generate process documentation for a new or updated ITSM workflow from a process owner\'s verbal description','Produce post-implementation review reports and lessons learned documents from ServiceNow change records and incident data']},
+    synth:  {s:2,why:'Synthesizing ITSM performance data across UIT\'s 730+ staff and dozens of service teams requires genuine interpretive analysis.',
+             cases:['Synthesize change success rates, incident volumes, and SLA performance across UIT into a quarterly service management health narrative','Identify patterns in failed or rolled-back changes to surface systemic risk in UIT\'s change process','Produce a maturity assessment narrative from process adherence and outcome data across UIT\'s ITSM practices']},
+    auto:   {s:2,why:'ServiceNow workflow automation and process orchestration are the core technical function of an ITSM program.',
+             cases:['Agent that monitors open change requests approaching approval deadlines and generates contextual escalation alerts','Automated CAB agenda preparation that synthesizes upcoming change risk, conflicts, and scheduling constraints','Workflow that detects an incident pattern matching a known problem record and auto-links them with a plain-language correlation note']},
+    rag:    {s:2,why:'ITSM policy, process, and ServiceNow configuration retrieval grounded in UIT\'s actual service management standards.',
+             cases:['Answer a team\'s question about the correct change category or approval path from actual UIT ITSM policy','Surface the relevant problem record and known workaround when a new incident matches a prior pattern','Retrieve applicable ITIL guidance and Stanford-specific process standards when designing a new ITSM workflow']},
+    pred:   {s:2,why:'Predicting change risk, incident volume, and SLA breach probability are high-value ITSM analytics use cases.',
+             cases:['Score incoming change requests by failure probability based on risk factors, timing, and historical change outcomes','Predict incident volume spikes by service category to help teams proactively staff and prepare','Forecast SLA breach risk for open tickets based on age, complexity, and assignee workload patterns']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+
+  // ═══════════════════════════════════════════════════════════
+  // ENTERPRISE TECHNOLOGY
+  // ═══════════════════════════════════════════════════════════
+  {dept:'ET',deptLabel:'Enterprise Technology',role:'Enterprise Systems\n(PeopleSoft, Oracle, Axess)',sub:'ET · University-wide ERP & SIS',
+   cells:{
+    conv:   {s:1,why:'User-facing support for complex enterprise systems.',
+             cases:['Conversational assistant for Axess that handles nuanced enrollment, grading, and academic record questions','Oracle/PeopleSoft help bot that interprets plain-language questions and routes to the right workflow']},
+    langgen:{s:2,why:'System change communications and user documentation require contextual, accurate drafting at scale.',
+             cases:['Draft plain-language release notes for PeopleSoft or Oracle upgrades tailored to different user groups','Generate process documentation from a functional consultant\'s walkthrough of a new workflow','Draft change management communications that explain not just what changed but why it matters to each affected group']},
+    synth:  {s:2,why:'Enterprise data synthesis for institutional decision-making requires interpretive reasoning.',
+             cases:['Synthesize OBIEE reporting data into a narrative for a dean or VP — turning numbers into a story','Identify anomalies across Oracle financials or PeopleSoft HR data that warrant investigation','Produce a plain-language quarterly system health summary for non-technical stakeholders']},
+    auto:   {s:2,why:'Data pipeline automation, integration orchestration, and workflow triggers are core ET engineering work.',
+             cases:['Agent that monitors data feeds between systems and generates an anomaly report when transformation rules fail','Automated plain-language notifications triggered by key system events (grade submission, payroll run completion)','Generate integration specs and data mapping documentation from a product team\'s plain-language requirements']},
+    rag:    {s:2,why:'Policy and system documentation retrieval grounded in Stanford-specific configurations.',
+             cases:['Answer a question about Stanford\'s PeopleSoft configuration from actual technical documentation','Surface applicable data governance policies when a new integration is being designed','Retrieve relevant system change history when diagnosing an unexpected data behavior']},
+    pred:   {s:1,why:'System performance and demand forecasting.',
+             cases:['Predict PeopleSoft or Oracle load spikes during enrollment, payroll, and quarter-end cycles','Model performance impact of a proposed system change before it reaches production']},
+    multi:  {s:1,why:'Processing legacy documents and data files.',
+             cases:['Extract and structure data from legacy PDF reports or scanned forms that predate digital systems','Analyze uploaded data files to diagnose format or encoding issues in an integration pipeline']},
+  }},
+  {dept:'ET',deptLabel:'Enterprise Technology',role:'Data Engineering\n& Analytics',sub:'ET · OBIEE · Tableau · Data Warehouse',
+   cells:{
+    conv:   {s:1,why:'Natural language interfaces to institutional data.',
+             cases:['Conversational interface to the Stanford data warehouse for non-technical stakeholders','AI analyst that helps a user formulate the right question before running a report']},
+    langgen:{s:2,why:'Turning institutional data into narrative insight is the highest-value Gen AI use in analytics.',
+             cases:['Generate the "so what" narrative from a Tableau dashboard for a provost or VP briefing','Draft a data story that explains why a KPI changed — synthesizing correlated signals into a human explanation','Produce a data dictionary entry for a new dataset from the engineer\'s technical description']},
+    synth:  {s:2,why:'Cross-source synthesis and pattern interpretation require reasoning, not just aggregation.',
+             cases:['Identify non-obvious correlations across enrollment, financial, and workforce datasets and articulate their implications','Synthesize a semester of OBIEE reports into a coherent annual trend narrative','Surface emerging patterns in research activity or financial data that warrant proactive leadership attention']},
+    auto:   {s:2,why:'Data pipeline monitoring, documentation generation, and code assistance are high-value automation targets.',
+             cases:['Agent that monitors pipeline health and generates a plain-language incident brief when a job fails','Generate data pipeline code from a researcher or analyst\'s described analytical workflow','Automated data quality checks with AI-generated anomaly narratives when issues are detected']},
+    rag:    {s:2,why:'Institutional data catalog and lineage retrieval grounded in Stanford\'s actual data architecture.',
+             cases:['Answer "where does this field come from and what does it mean" from the institutional data catalog','Surface applicable data governance policies when a new dataset is being onboarded','Retrieve relevant prior analyses when a similar question has been answered before']},
+    pred:   {s:2,why:'Predictive analytics is literally this team\'s core product.',
+             cases:['Build models that predict enrollment, retention, or research activity trends for institutional planning','Anomaly detection on financial or operational data streams with AI-generated contextual explanations','Model the impact of policy changes on institutional metrics before they are implemented']},
+    multi:  {s:1,why:'Processing varied source documents and data formats.',
+             cases:['Extract structured data from uploaded legacy reports, PDFs, or scanned institutional documents','Analyze visualizations and charts to extract numerical data when source files are unavailable']},
+  }},
+  {dept:'ET',deptLabel:'Enterprise Technology',role:'Application Development\n& Consulting',sub:'ET · Custom Solutions · ServiceNow · Salesforce · 112 projects',
+   cells:{
+    conv:   {s:1,why:'Client requirements gathering and technical consulting support.',
+             cases:['AI requirements analyst that engages with a client to surface unstated needs and constraints','Conversational debugging assistant that helps a developer reason through a complex integration failure']},
+    langgen:{s:2,why:'Technical documentation, specs, and client communications require contextual, audience-aware generation.',
+             cases:['Generate technical requirements documents from a client\'s plain-language description of what they need','Draft API documentation that explains intent and design decisions, not just parameters','Produce a project kickoff brief and scope statement from intake meeting notes']},
+    synth:  {s:1,why:'Synthesizing project portfolio status and technical debt across 112+ concurrent projects.',
+             cases:['Synthesize the status of 112 concurrent projects into a risk-stratified portfolio brief for ET leadership','Identify patterns across client requests to surface opportunities for reusable platforms or shared services']},
+    auto:   {s:2,why:'Code generation, testing, and deployment pipeline automation are core engineering productivity use cases.',
+             cases:['AI code generation for ServiceNow and Salesforce customizations from functional specifications','Agent that reviews a pull request, identifies issues, and drafts a structured code review comment','Generate unit tests from existing code to improve coverage without manual test authoring']},
+    rag:    {s:2,why:'Code and institutional pattern retrieval grounded in Stanford\'s actual development standards.',
+             cases:['Surface relevant prior Stanford implementations when starting a new integration with Banner or PeopleSoft','Retrieve applicable Stanford security and data governance requirements for a new application','Answer a developer\'s question about Stanford\'s API standards from actual technical documentation']},
+    pred:   {s:1,why:'Project timeline and resource forecasting.',
+             cases:['Predict project delivery risk based on scope, team, and historical velocity for similar projects','Forecast resource demand across the ET development portfolio for hiring and capacity planning']},
+    multi:  {s:1,why:'Processing technical artifacts and design documents.',
+             cases:['Analyze an uploaded architecture diagram to identify integration gaps or security concerns','Extract and structure requirements from a PDF specification or business process document']},
+  }},
+
+  // ═══════════════════════════════════════════════════════════
+  // INFORMATION SECURITY OFFICE
+  // ═══════════════════════════════════════════════════════════
+  {dept:'ISO',deptLabel:'Information Security Office',role:'Security Operations\n& Incident Response',sub:'ISO · 25,834 alerts remediated · 2.5M threats blocked',
+   cells:{
+    conv:   {s:1,why:'Analyst dialogue support for complex incident triage.',
+             cases:['Conversational triage assistant for on-call analysts navigating unfamiliar incident types','AI analyst that helps a security engineer reason through a complex log pattern by asking structured questions']},
+    langgen:{s:2,why:'Incident communications at Stanford must be accurate, calm, and audience-appropriate — high stakes, high volume.',
+             cases:['Draft an incident notification for the Stanford community that is accurate without causing panic','Generate a post-incident review report from timeline logs, response actions, and lessons learned','Produce a security advisory for a specific audience (faculty, students, IT staff) in relevant terms']},
+    synth:  {s:2,why:'Synthesizing threat intelligence across 25,834 annual alerts requires interpretive reasoning.',
+             cases:['Synthesize threat intelligence feeds into an executive brief with Stanford-specific risk framing','Identify attack pattern evolution across a quarter\'s incident data to inform proactive defense posture','Produce a monthly security narrative for the CISO that contextualizes metrics within the broader threat landscape']},
+    auto:   {s:2,why:'Automated detection, triage, and response orchestration are foundational security operations capabilities.',
+             cases:['Agent that correlates alerts across Splunk, Qualys, and email security tools into a unified incident priority queue','Automated Proofpoint URL Defense alert triage that classifies severity and routes to the right analyst','Phishing report workflow that ingests a reported email, analyzes it, and produces a disposition recommendation']},
+    rag:    {s:2,why:'Policy, framework, and regulation retrieval grounded in actual Stanford security standards.',
+             cases:['Answer a nuanced FERPA or HIPAA compliance question from actual regulation and Stanford policy','Surface applicable NIST or CIS controls for a specific system change under security review','Retrieve Stanford Minimum Security Standards when reviewing a new service or vendor for approval']},
+    pred:   {s:2,why:'Threat prediction and user behavior analytics are core security ML use cases at Stanford\'s scale.',
+             cases:['User behavior analytics model that scores accounts for anomalous access patterns — flagging potential compromise','Predict phishing susceptibility by user population to focus awareness training where it matters most','Model vulnerability exposure across 46,193 managed endpoints to prioritize patching order']},
+    multi:  {s:2,why:'Email and document analysis for threat detection is a core security modality.',
+             cases:['Analyze email content, headers, and attachments to identify sophisticated phishing attempts','Process uploaded suspicious documents to classify threat type and extract indicators of compromise','Generate structured threat reports from unstructured analyst field notes']},
+  }},
+  {dept:'ISO',deptLabel:'Information Security Office',role:'Vulnerability Management\n& Compliance',sub:'ISO · 1,491 Bug Bounty disclosures · Qualys · Wiz',
+   cells:{
+    conv:   {s:1,why:'Developer and system owner dialogue about remediation paths.',
+             cases:['AI assistant that helps a system owner understand what a Qualys finding means for their specific system','Conversational guide through the OneTrust data risk assessment process for a non-technical researcher']},
+    langgen:{s:2,why:'Vulnerability advisories and compliance communications must be technically accurate and audience-tailored.',
+             cases:['Generate a plain-language remediation guidance document for a system owner from a Qualys or Wiz finding','Draft a compliance status narrative for leadership from scan data and open findings','Write a developer-facing security advisory that explains a vulnerability class with Stanford-specific examples']},
+    synth:  {s:2,why:'Synthesizing findings across 46,193 endpoints and 1,491 bug bounty disclosures requires interpretive prioritization.',
+             cases:['Synthesize the open vulnerability landscape into a risk-stratified remediation priority narrative for the CISO','Identify systemic exposure patterns across scan data — "this class of finding keeps appearing in research systems"','Produce an annual vulnerability program report that contextualizes trending, not just totals']},
+    auto:   {s:2,why:'Automated scan-to-ticket and remediation tracking workflows are core vulnerability management operations.',
+             cases:['Agent that ingests a Qualys scan result, generates a prioritized finding summary, and creates ServiceNow tickets for critical items','Automated bug bounty triage that categorizes severity and generates an initial response draft','Compliance monitoring agent that tracks remediation SLAs and escalates overdue items with context']},
+    rag:    {s:2,why:'Regulatory and standards retrieval grounded in actual frameworks Stanford must comply with.',
+             cases:['Answer "is this configuration compliant with NIST 800-171" from the actual standard','Surface applicable Stanford Minimum Security Standards for a specific finding type','Retrieve relevant FERPA or HIPAA guidance when a vulnerability involves systems handling regulated data']},
+    pred:   {s:2,why:'Predicting which vulnerabilities will be exploited before patches are applied is a core security risk function.',
+             cases:['Score vulnerability exploitation likelihood using threat intelligence and CVSS data to prioritize patching','Forecast compliance posture trend for a specific system owner based on their remediation velocity','Model breach risk reduction impact of different patching strategies before resource allocation']},
+    multi:  {s:1,why:'Processing security scan reports and compliance documentation.',
+             cases:['Extract structured findings from uploaded PDF vulnerability scan reports','Analyze architecture diagrams to identify potential attack surfaces before a system goes to production']},
+  }},
+  {dept:'ISO',deptLabel:'Information Security Office',role:'Security Awareness\n& Training (SISA)',sub:'ISO · Stanford Information Security Academy',
+   cells:{
+    conv:   {s:2,why:'Personalized security coaching requires adaptive dialogue — static training doesn\'t change behavior.',
+             cases:['AI security coach that engages staff after a phishing simulation click — educational, not punitive','Conversational security guidance for a researcher confused about data risk classification','Interactive training scenarios where learners make decisions and receive contextual feedback']},
+    langgen:{s:2,why:'Security awareness content must be contextually relevant to Stanford — generic content is ignored.',
+             cases:['Draft a phishing awareness bulletin tailored to a current threat targeting Stanford specifically','Generate role-specific security guidance for a researcher handling high-risk data vs. an admin using Workday','Create scenario-based training narratives that feel like real Stanford situations, not generic IT cautionary tales']},
+    synth:  {s:1,why:'Understanding which awareness efforts are moving the needle requires synthesis of behavioral data.',
+             cases:['Synthesize phishing simulation click rates and training completion data into a narrative for the CISO','Identify which departments or roles have persistent security behavior gaps based on incident and training data']},
+    auto:   {s:1,why:'Training assignment and awareness campaign automation.',
+             cases:['Automated training assignment triggered by a specific security event (phishing click, policy violation)','Content calendar automation that generates and schedules awareness content tied to seasonal threat patterns']},
+    rag:    {s:1,why:'Policy and regulation retrieval for accurate, current training content.',
+             cases:['Ensure training content accurately reflects current Stanford Minimum Security Standards and FERPA requirements','Surface relevant threat intelligence when developing awareness content for a specific attack type']},
+    pred:   {s:1,why:'Predicting which behaviors and populations need intervention.',
+             cases:['Model which user populations are at highest risk of a successful phishing attack based on behavioral signals','Predict training completion rates by department to identify where proactive outreach is needed']},
+    multi:  {s:2,why:'Video production, document analysis, and multimodal training content creation.',
+             cases:['Generate accessible captions and transcripts for SISA video training modules automatically','Analyze uploaded screenshots from a reported incident to create realistic training scenario materials','Process training feedback recordings to identify which content creates the most engagement']},
+  }},
+
+  // ═══════════════════════════════════════════════════════════
+  // IT INFRASTRUCTURE
+  // ═══════════════════════════════════════════════════════════
+  {dept:'Infra',deptLabel:'IT Infrastructure',role:'Network Engineering\n& Operations',sub:'Infra · 22,000 Wi-Fi APs · 7 PB internet traffic',
+   cells:{
+    conv:   {s:1,why:'Operational support dialogue for network engineers and help desk.',
+             cases:['Conversational assistant that helps a network engineer reason through a complex routing or configuration problem','AI guide for end users reporting connectivity issues that gathers structured diagnostic information before a ticket is created']},
+    langgen:{s:1,why:'Network change documentation and incident communications.',
+             cases:['Draft a change management plan and stakeholder communication for a planned network maintenance window','Generate network configuration documentation from an engineer\'s verbal description of what was implemented and why']},
+    synth:  {s:2,why:'Synthesizing signal across 22,000 access points and 7 PB of traffic requires interpretive reasoning.',
+             cases:['Synthesize network performance data across campus zones into a narrative for infrastructure leadership','Identify recurring connectivity patterns in a specific building from aggregated monitoring data','Produce a quarterly network health report that tells the story behind the metrics']},
+    auto:   {s:2,why:'Automated monitoring, alerting, and remediation workflows are core network operations.',
+             cases:['Agent that correlates performance alerts across the network stack and generates a structured incident brief','Automated change validation that checks a proposed configuration against Stanford network standards before deployment','Trigger proactive user notifications when a specific access point or zone is experiencing degraded performance']},
+    rag:    {s:2,why:'Network standards and configuration documentation retrieval is foundational for a 22,000-AP operation.',
+             cases:['Surface the correct VLAN and firewall configuration standards when a new building is being connected','Retrieve relevant change records when diagnosing a network issue that may relate to a recent modification','Answer "what is the approved approach for X network configuration at Stanford" from actual engineering standards']},
+    pred:   {s:2,why:'Capacity planning and failure prediction at Stanford\'s network scale are genuinely high-value ML use cases.',
+             cases:['Predict bandwidth demand by zone during high-use events (commencement, autumn quarter start)','Model failure probability for aging network hardware to prioritize proactive replacement before outages','Forecast cellular coverage gaps as campus density and device patterns shift']},
+    multi:  {s:1,why:'Processing network diagrams and physical infrastructure documentation.',
+             cases:['Analyze uploaded network diagrams to identify configuration inconsistencies or security gaps','Extract and structure data from TSO signal drawings and construction documents for NetDB']},
+  }},
+  {dept:'Infra',deptLabel:'IT Infrastructure',role:'Data Center &\nServer Operations',sub:'Infra · Centralized Hosting · Virtual Servers',
+   cells:{
+    conv:   {s:1,why:'Operational and client support dialogue.',
+             cases:['AI assistant that helps a system owner navigate server hosting options and requirements','Conversational triage for server health alerts that helps on-call staff prioritize and respond']},
+    langgen:{s:1,why:'Technical documentation and change communications.',
+             cases:['Generate server provisioning runbooks from an engineer\'s described configuration','Draft a decommission plan and stakeholder communication for a server lifecycle event']},
+    synth:  {s:2,why:'Synthesizing server health, capacity, and incident data across a large hosted environment.',
+             cases:['Synthesize utilization, performance, and incident data across the hosted server portfolio into a capacity planning narrative','Identify systems approaching resource limits before they cause incidents','Produce a monthly infrastructure health brief that interprets trends, not just lists metrics']},
+    auto:   {s:2,why:'Automated provisioning, monitoring, and lifecycle management workflows.',
+             cases:['Agent that monitors server health metrics and generates a contextualized alert with remediation suggestions','Automated capacity reporting triggered by utilization thresholds with AI-generated trend narrative','Lifecycle management agent that flags servers approaching end-of-support and initiates migration planning workflows']},
+    rag:    {s:1,why:'Configuration standards and operational procedure retrieval.',
+             cases:['Surface applicable Stanford server hardening standards when a new system is being provisioned','Retrieve past incident records for a similar system failure to inform current response']},
+    pred:   {s:2,why:'Capacity forecasting and failure prediction for hosted infrastructure.',
+             cases:['Predict storage and compute demand growth by service category for infrastructure investment planning','Model failure probability for aging server hardware based on performance degradation patterns']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+
+  // ═══════════════════════════════════════════════════════════
+  // OFFICE OF THE CIO
+  // ═══════════════════════════════════════════════════════════
+  {dept:'OCIO',deptLabel:'Office of the CIO',role:'Administrative &\nExecutive Assistants',sub:'OCIO · Leadership Team support · UIT-wide admin coordination',
+   cells:{
+    conv:   {s:2,why:'Scheduling, briefing prep, and stakeholder coordination involve constant contextual dialogue — EAs navigate ambiguity on behalf of senior leaders all day.',
+             cases:['AI scheduling assistant that drafts meeting requests and manages complex multi-party calendar coordination on behalf of a leadership team member','Conversational prep assistant that briefs an exec on who they\'re meeting, relevant context, and open action items before a meeting','AI triage for a leader\'s inbox that categorizes messages by urgency and drafts suggested responses for review']},
+    langgen:{s:2,why:'EAs and AAs draft high-stakes communications, briefings, and logistical documents for senior leaders constantly — contextual generation is the core productivity gain.',
+             cases:['Draft a meeting agenda and pre-read brief from a leader\'s notes and the meeting\'s objectives','Generate board or steering committee meeting minutes from notes that capture decisions and action items clearly','Draft a leadership team communication — announcement, memo, or update — from a bullet list of key points, matching the leader\'s voice','Produce travel itineraries, logistics documents, and vendor coordination emails that are complete and accurate the first time']},
+    synth:  {s:2,why:'Synthesizing information across many sources to prepare a leader for a conversation or decision is high-value, high-frequency EA work.',
+             cases:['Synthesize background materials for a leadership team member before a stakeholder meeting — surfacing relevant history, open issues, and relationship context','Distill a long email thread or document set into a concise briefing that gives a senior leader what they need in two minutes','Synthesize action items and commitments from multiple meeting notes into a consolidated follow-up tracker']},
+    auto:   {s:1,why:'Workflow automation for recurring administrative processes.',
+             cases:['Automated meeting follow-up workflow that generates a draft action item summary and distributes it to attendees','Recurring report aggregation that pulls status updates from multiple UIT sources and assembles a leadership digest']},
+    rag:    {s:1,why:'Policy and process retrieval for administrative coordination.',
+             cases:['Answer a question about Stanford travel, procurement, or HR policy from actual university administrative guidelines','Surface the correct approval process or form for an unusual administrative request']},
+    pred:   {s:0,why:'',cases:[]},
+    multi:  {s:1,why:'Processing documents, presentations, and mixed-format materials.',
+             cases:['Extract key information from an uploaded PDF report or presentation to prepare a leadership briefing','Review a draft presentation or document and summarize suggested edits for a leader\'s review']},
+  }},
+  {dept:'OCIO',deptLabel:'Office of the CIO',role:'Project Management\nOffice (PMO)',sub:'OCIO · UIT-wide project portfolio · 112 projects managed',
+   cells:{
+    conv:   {s:1,why:'Project stakeholder communication and planning dialogue support.',
+             cases:['Conversational project intake assistant that scopes a new request and identifies risks, dependencies, and resourcing needs before a PM engages','AI prep partner for a difficult project status conversation — anticipating stakeholder questions and sharpening the PM\'s messaging']},
+    langgen:{s:2,why:'Project documentation — charters, status reports, risk registers, stakeholder communications — requires contextual, accurate generation at high volume across 112 concurrent projects.',
+             cases:['Generate a project charter and scope statement from a PM\'s intake notes and stakeholder conversations','Draft a plain-language project status update for a non-technical sponsor that explains where things stand, what\'s at risk, and what\'s needed','Produce a project close-out report and lessons learned document from project notes, issue logs, and retrospective discussions','Draft escalation communications that accurately represent project risk without damaging stakeholder relationships']},
+    synth:  {s:2,why:'Synthesizing 112 concurrent projects into a coherent portfolio view for UIT leadership requires interpretive analysis, not just dashboards.',
+             cases:['Synthesize project status data across the UIT portfolio into a risk-stratified narrative for the CIO — identifying where attention is needed','Identify resource conflicts, dependency risks, and scheduling pressure points across the portfolio before they become problems','Produce a quarterly portfolio health report that tells the story behind the RAG statuses and milestone data']},
+    auto:   {s:2,why:'Project workflow automation — status collection, reporting, escalation, and documentation — is high-value across 112 projects.',
+             cases:['Agent that aggregates weekly project status inputs from ServiceNow and generates a consolidated portfolio digest for UIT leadership','Automated risk register updates triggered by project milestone changes, with AI-generated impact assessments','Workflow that detects a project approaching a red status threshold and drafts an escalation brief for the PM\'s review before it\'s sent']},
+    rag:    {s:2,why:'PMO methodology, standards, and historical project retrieval grounded in UIT\'s actual practices.',
+             cases:['Surface relevant prior project plans and lessons learned when a new project resembles something UIT has done before','Answer a PM\'s question about UIT\'s project governance process from actual PMO standards documentation','Retrieve applicable change management or communications approach from prior similar projects in the UIT portfolio']},
+    pred:   {s:2,why:'Project delivery risk prediction and resource forecasting across 112 concurrent projects is a genuine ML use case.',
+             cases:['Score each project in the portfolio by delivery risk based on scope, team capacity, dependency count, and schedule pressure','Forecast resource demand across the PMO portfolio for the next quarter to identify staffing gaps before they delay projects','Predict which project types are most likely to require scope changes based on historical patterns in similar UIT efforts']},
+    multi:  {s:1,why:'Processing project documents, presentations, and meeting artifacts.',
+             cases:['Extract action items, decisions, and risks from an uploaded set of meeting notes or workshop outputs','Analyze an uploaded project plan or WBS to identify scheduling conflicts or missing dependencies']},
+  }},
+  {dept:'OCIO',deptLabel:'Office of the CIO',role:'Strategic Communications\n& Governance',sub:'OCIO · Org-wide Vision & Messaging',
+   cells:{
+    conv:   {s:1,why:'Executive preparation and stakeholder dialogue support.',
+             cases:['Interactive prep for a difficult governance conversation — anticipating questions and sharpening responses','AI sounding board for CIO messaging strategy before a major announcement']},
+    langgen:{s:2,why:'Strategic communications require synthesizing complexity into persuasive, accurate narrative — core Gen AI territory for OCIO.',
+             cases:['Draft a technology strategy narrative for the President and Provost that is compelling and grounded in UIT data','Generate talking points for a difficult stakeholder conversation about a delayed project or service change','Produce UIT newsletter content that translates technical accomplishments into stories the Stanford community cares about','Draft a board-level strategy presentation narrative from portfolio statuses and service metrics']},
+    synth:  {s:2,why:'Synthesizing across UIT\'s seven units and 730+ staff for leadership communications requires genuine interpretive synthesis.',
+             cases:['Distill seven unit reports into a coherent CIO annual review narrative — identifying themes and surfacing tensions','Synthesize Campus IT Plan inputs from across Stanford\'s decentralized IT community into strategic themes','Identify the connective tissue across UIT\'s priorities to tell a coherent organizational story']},
+    auto:   {s:1,why:'Portfolio monitoring and communications distribution workflows.',
+             cases:['Agent that aggregates weekly project status updates from ServiceNow into a single executive digest','Automated trend alerts when institutional IT KPIs shift significantly across the portfolio']},
+    rag:    {s:1,why:'Governance policy and precedent retrieval for decision-making.',
+             cases:['Surface relevant IT governance precedents when evaluating an unusual organizational or investment decision','Retrieve applicable university policy when advising on a governance question from a department IT leader']},
+    pred:   {s:1,why:'Portfolio and workforce planning modeling.',
+             cases:['Model IT investment scenarios and their projected impact on UIT\'s strategic goals over a three-year horizon','Forecast workforce capability gaps given UIT\'s technology roadmap and planned service evolution']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+  {dept:'OCIO',deptLabel:'Office of the CIO',role:'Staff Development\n& Learning',sub:'OCIO · Workforce Development · UIT-wide capability building',
+   cells:{
+    conv:   {s:2,why:'Personalized learning and career coaching require adaptive dialogue — static programs cannot meet individuals where they are.',
+             cases:['AI career development coach that helps a UIT staff member identify growth opportunities aligned to their skills and interests','Personalized learning pathway chatbot that recommends training based on role and career goals','On-demand AI coach for new managers navigating their first difficult conversation or performance review']},
+    langgen:{s:2,why:'Development content and HR communications require contextual, empathetic, and accurate generation.',
+             cases:['Draft a tailored development plan from a manager\'s notes on a staff member\'s strengths and growth areas','Generate job architecture content and competency frameworks for new roles as UIT evolves','Produce internal communication about an organizational change that acknowledges real concerns while explaining the rationale']},
+    synth:  {s:2,why:'Understanding workforce capability trends requires synthesizing feedback, performance, and engagement data.',
+             cases:['Synthesize themes from UIT staff engagement survey data into a narrative for leadership — not just scores but the story behind them','Identify capability gaps across UIT teams relative to the technology roadmap to inform hiring and development strategy','Produce a workforce development impact report connecting learning investments to retention and capability outcomes']},
+    auto:   {s:0,why:'',cases:[]},
+    rag:    {s:1,why:'Policy and HR practice retrieval for managers and staff.',
+             cases:['Answer a manager\'s nuanced question about Stanford performance management policy from actual HR documentation','Surface relevant internal learning resources when a staff member is exploring a new skill area']},
+    pred:   {s:1,why:'Attrition risk and workforce planning modeling.',
+             cases:['Model attrition risk by team and role to inform proactive retention investment','Forecast UIT capability needs given the planned technology roadmap and service evolution over the next three years']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+
+  // ═══════════════════════════════════════════════════════════
+  // RESEARCH COMPUTING
+  // ═══════════════════════════════════════════════════════════
+  {dept:'RC',deptLabel:'Research Computing',role:'HPC & Scientific\nComputing',sub:'RC · Sherlock · Marlowe · 836 GPUs · 200 publications',
+   cells:{
+    conv:   {s:2,why:'Researchers need an expert dialogue partner for HPC — documentation alone fails for complex use cases.',
+             cases:['Conversational HPC assistant that helps a researcher design a job script for Sherlock or Marlowe for their specific workflow','AI guide that helps a researcher understand why their job failed and what to try next','Onboarding chatbot for new Sherlock users that answers configuration and policy questions in context']},
+    langgen:{s:2,why:'Research computing requires generating code, documentation, and grant language that is highly contextual.',
+             cases:['Generate optimized job submission scripts for a researcher\'s specific computational workflow on Sherlock or Marlowe','Draft the computational methods section of a paper or grant from a researcher\'s described workflow','Produce usage reports and allocation recommendations for PI accounts in plain language for non-technical reviewers']},
+    synth:  {s:2,why:'Synthesizing research computing usage across 1,200 PIs and 200 publications requires interpretive analysis.',
+             cases:['Synthesize utilization patterns across the Sherlock and Marlowe cluster to inform capacity planning and allocation policy','Identify which research groups are underutilizing allocated resources and generate targeted outreach recommendations','Produce a quarterly research computing impact narrative from usage, publication, and consultation data']},
+    auto:   {s:2,why:'Automated job management, allocation workflows, and code generation are high-value for an HPC environment.',
+             cases:['Agent that monitors job queue health and generates a plain-language status brief for RC staff','Automated allocation renewal workflow that generates a usage summary and recommendation for the PI','Code generation agent for common bioinformatics, ML, and data analysis pipelines on Stanford\'s HPC stack']},
+    rag:    {s:2,why:'Technical documentation retrieval grounded in Stanford\'s specific HPC environment is the most important daily productivity tool.',
+             cases:['Answer a researcher\'s question about Sherlock partition limits, storage policies, or module availability from actual RC documentation','Surface relevant prior configurations when a PI is replicating a workflow from a past project','Retrieve applicable data governance requirements for a researcher working with regulated data on HPC systems']},
+    pred:   {s:2,why:'Cluster capacity forecasting and allocation optimization are core RC operations.',
+             cases:['Predict GPU and CPU demand across Sherlock and Marlowe by quarter based on enrollment, grant award, and faculty hiring trends','Model the capacity impact of onboarding a major new research initiative before resource commitment','Forecast storage growth to plan Oak and Elm storage tier investment']},
+    multi:  {s:2,why:'Processing scientific data, images, and documents is core to supporting computational research.',
+             cases:['AI-assisted analysis of scientific imaging or genomics data as part of an RC-supported research pipeline','Process and structure data from uploaded legacy experimental datasets for ingestion into modern HPC workflows','Generate training materials from recorded RC workshop sessions — transcripts, summaries, and searchable content']},
+  }},
+  {dept:'RC',deptLabel:'Research Computing',role:'Research Computing\nConsulting',sub:'RC · 1,200 PIs supported',
+   cells:{
+    conv:   {s:2,why:'Research consulting is fundamentally a dialogue — interpreting a researcher\'s problem and reasoning toward solutions together.',
+             cases:['AI research computing consultant that helps a researcher describe their computational problem and scopes the right solution','Conversational guide through selecting the right Stanford computing resource (Sherlock, Nero, cloud) for a specific workflow','Intake bot that gathers structured information about a consulting request before a human consultant engages']},
+    langgen:{s:2,why:'Translating between research language and technical implementation — and documenting it — is core consulting work.',
+             cases:['Draft a technical implementation plan from a researcher\'s description of their analytical workflow in plain language','Generate a consultation summary and follow-up action list from meeting notes','Translate a complex statistical or computational methodology into a methods section a journal will accept']},
+    synth:  {s:1,why:'Understanding patterns across 1,200 PIs to improve service and identify common needs.',
+             cases:['Synthesize consulting request patterns to identify opportunities for shared tools, tutorials, or reusable pipelines','Identify which research domains are growing in computational demand to inform RC capacity and hiring']},
+    auto:   {s:1,why:'Consultation intake and follow-up workflows.',
+             cases:['Automated follow-up workflow that checks on open action items from a consultation and closes stale tickets','Code generation for standard research computing tasks — slurm scripts, data transfer, environment configuration']},
+    rag:    {s:2,why:'Retrieval grounded in Stanford\'s actual HPC documentation and past consultation records.',
+             cases:['Surface relevant prior consultation records when a similar research problem has been solved before','Retrieve applicable Stanford data governance requirements for a researcher handling HIPAA or export-controlled data on HPC']},
+    pred:   {s:0,why:'',cases:[]},
+    multi:  {s:1,why:'Processing research data and scientific documents.',
+             cases:['Analyze uploaded data files or scripts to diagnose issues before a consultation begins','Extract and structure requirements from a researcher\'s uploaded grant or protocol documents']},
+  }},
+
+  // ═══════════════════════════════════════════════════════════
+  // FINANCIAL SERVICES
+  // ═══════════════════════════════════════════════════════════
+  {dept:'FS',deptLabel:'Financial Services',role:'Vendor Management',sub:'FS · $13.7M saved through contract negotiations',
+   cells:{
+    conv:   {s:1,why:'Negotiation preparation and contract Q&A support.',
+             cases:['AI prep partner for a vendor negotiation — surfacing Stanford\'s leverage points and anticipating counterarguments','Conversational contract Q&A that answers "what does this clause mean for us" from actual contract language']},
+    langgen:{s:2,why:'Contract negotiation and vendor communications require precise, contextually aware language generation.',
+             cases:['Draft negotiation position statements and counter-proposals for software and cloud vendor renewals','Generate a vendor comparison narrative from RFP responses that surfaces tradeoffs clearly for a decision-maker','Draft a vendor escalation communication that is firm and specific without damaging the relationship']},
+    synth:  {s:2,why:'Synthesizing vendor landscape, contract terms, and usage data across Stanford\'s IT portfolio requires interpretive analysis.',
+             cases:['Synthesize the IT vendor portfolio into a renewal risk calendar with strategic notes for each upcoming negotiation','Compare contract terms across multiple RFP responses and surface the key differentiators and risks','Identify patterns in software usage data that reveal underutilized licenses before a renewal conversation']},
+    auto:   {s:1,why:'Contract lifecycle and renewal tracking workflows.',
+             cases:['Automated contract expiration alerts with AI-generated negotiation briefings 90 days before renewal','Agent that monitors software license utilization and flags underuse ahead of renewal to inform negotiation leverage']},
+    rag:    {s:2,why:'Contract term retrieval and compliance checking grounded in actual Stanford agreements.',
+             cases:['Answer "what are our termination rights under the Zoom enterprise agreement" from the actual contract','Surface relevant Stanford procurement policy when evaluating a non-standard vendor arrangement','Retrieve past negotiation outcomes for a vendor to inform the current renewal strategy']},
+    pred:   {s:1,why:'Contract value and market pricing forecasting.',
+             cases:['Model expected market pricing trends for key software categories to inform negotiation timing and strategy','Forecast total cost of ownership for a proposed new vendor relationship including hidden cost drivers']},
+    multi:  {s:1,why:'Processing contract documents and vendor response packages.',
+             cases:['Extract key terms, SLAs, and obligations from a complex vendor contract document','Compare two contract versions and generate a structured redline summary of material changes']},
+  }},
+  {dept:'FS',deptLabel:'Financial Services',role:'Finance & Revenue\nOperations',sub:'FS · UIT Budget & Cost Recovery',
+   cells:{
+    conv:   {s:1,why:'Internal finance Q&A and planning support.',
+             cases:['AI assistant that helps a UIT team manager understand their cost recovery statement and budget variance','Finance chatbot that answers questions about UIT chargeback rates, billing, and cost allocation']},
+    langgen:{s:2,why:'Budget narratives and financial communications require contextual, accurate generation that explains, not just reports.',
+             cases:['Draft a plain-language budget variance explanation for a UIT unit director that tells the story behind the numbers','Generate a cost recovery rate-setting narrative that explains the methodology to non-finance stakeholders','Produce a financial section for the UIT annual report connecting resource use to strategic outcomes']},
+    synth:  {s:2,why:'Financial synthesis across UIT\'s 730-person, seven-unit operation requires interpretive reasoning.',
+             cases:['Synthesize budget performance across all seven UIT units into a coherent year-end financial narrative for the CIO','Identify cost driver trends that warrant leadership attention before they become budget problems','Produce a cost recovery sustainability analysis from billing, utilization, and cost data']},
+    auto:   {s:1,why:'Financial reporting and anomaly detection workflows.',
+             cases:['Automated monthly financial variance report with AI-generated narrative explanation of significant deviations','Agent that monitors UIT billing data and flags unusual patterns for finance team review']},
+    rag:    {s:1,why:'Stanford financial policy and budget documentation retrieval.',
+             cases:['Answer a manager\'s question about Stanford overhead recovery policy from actual financial guidelines','Surface applicable Business Affairs financial policies when evaluating a non-standard expenditure']},
+    pred:   {s:2,why:'Budget forecasting and cost recovery modeling are core finance functions.',
+             cases:['Forecast end-of-year budget position by unit based on current actuals and projected spend patterns','Model the financial impact of a proposed service price change on cost recovery and client demand']},
+    multi:  {s:0,why:'',cases:[]},
+  }},
+];
+
+// ─── BUILD TABLE ────────────────────────────────────────────
+const table=document.getElementById('matrix');
+let hHTML='<thead><tr>';
+hHTML+=`<th class="corner"><div class="corner-label"><span>↓ UIT Function</span><br><span style="opacity:.5;font-size:8.5px">→ AI Modality</span></div></th>`;
+MODALITIES.forEach((m,mi)=>{
+  hHTML+=`<th class="col-header" id="col-${mi}" scope="col" tabindex="0" aria-label="${m.name.replace(/\n/,' ')} modality column header">
+    <span class="modality-name">${m.name.replace(/\n/,'<br>')}</span>
+    <span class="modality-tag">${m.tag}</span>
+  </th>`;
+});
+hHTML+='</tr></thead>';
+table.innerHTML=hHTML;const cap=document.createElement('caption');cap.className='visually-hidden';cap.textContent='AI Modalities Matrix — Stanford UIT team functions versus AI modality categories. Use Tab to navigate headers and interactive cells. Click or press Enter on a filled cell to open use case details.';table.insertBefore(cap,table.firstChild);
+
+const tbody=document.createElement('tbody');
+let lastDept=null;
+const deptNames={CXS:'Client Experience & Solutions (16 Teams)',ET:'Enterprise Technology',ISO:'Information Security Office',Infra:'IT Infrastructure',OCIO:'Office of the CIO (4 Teams)',RC:'Research Computing',FS:'Financial Services'};
+
+ROLES.forEach((role,ri)=>{
+  if(role.dept!==lastDept){
+    const lr=document.createElement('tr');
+    lr.className='dept-label-row';
+    lr.innerHTML=`<th scope="rowgroup">${deptNames[role.dept]}</th>${MODALITIES.map(()=>'<td></td>').join('')}`;
+    tbody.appendChild(lr);
+    lastDept=role.dept;
+  }
+  const tr=document.createElement('tr');
+  tr.setAttribute('data-dept',role.dept);
+  tr.setAttribute('data-ri',ri);
+  tr.innerHTML=`<th class="row-header" id="row-${ri}" scope="row" tabindex="0" aria-label="${role.role.replace(/\n/,' ')} row header">
+    <span class="role-name">${role.role.replace(/\n/,'<br>')}</span>
+    <span class="role-dept">${role.sub}</span>
+  </th>`;
+  MODALITIES.forEach((m,mi)=>{
+    const cell=role.cells[m.id]||{s:0,why:'',cases:[]};
+    const td=document.createElement('td');
+    td.className='cell';
+    td.setAttribute('data-ri',ri);
+    td.setAttribute('data-mi',mi);
+    td.setAttribute('data-outcome',m.outcome||'');
+    const strengthLabels={2:'Primary fit',1:'Secondary / emerging',0:'Not applicable'};
+    const strengthText=cell.s===2?'Primary fit':cell.s===1?'Secondary / emerging':'Not applicable';
+    td.innerHTML=`<div class="cell-inner strength-${cell.s}">${cell.s>0?'<div class="dot"></div>':''}${cell.s>0?'<span class="visually-hidden">'+strengthText+'</span>':''}</div>`;
+    td.setAttribute('aria-label',`${role.role.replace(/\n/,' ')} × ${m.name.replace(/\n/,' ')}: ${strengthText}`);
+    if(cell.s>0){
+      td.setAttribute('tabindex','0');
+      td.setAttribute('role','button');
+      td.setAttribute('aria-haspopup','dialog');
+      td.setAttribute('aria-controls','info-panel');
+      td.setAttribute('aria-describedby',`row-${ri} col-${mi}`);
+      td.addEventListener('mouseenter',e=>showTooltip(e,role,m,cell));
+      td.addEventListener('mouseleave',()=>hideTooltip());
+      td.addEventListener('focus',()=>{
+        clearFocusContext();
+        const rowHeader=document.getElementById(`row-${ri}`);
+        const colHeader=document.getElementById(`col-${mi}`);
+        if(rowHeader)rowHeader.classList.add('focus-context');
+        if(colHeader)colHeader.classList.add('focus-context');
+      });
+      td.addEventListener('blur',()=>clearFocusContext());
+      td.addEventListener('click',()=>openPanel(role,m,cell));
+      td.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openPanel(role,m,cell);}});
+      td.style.cursor='pointer';
+    }
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+});
+table.appendChild(tbody);
+
+// ─── HIGHLIGHT LOGIC ────────────────────────────────────────
+let activeCol=null,activeRow=null,activeDept=null,activeOutcome=null;
+function clearAll(){
+  activeCol=null;activeRow=null;activeDept=null;activeOutcome=null;
+  document.querySelectorAll('.cell').forEach(c=>c.classList.remove('dimmed','highlighted'));
+  document.querySelectorAll('.col-header').forEach(c=>c.classList.remove('col-hl'));
+  document.querySelectorAll('.row-header').forEach(r=>r.classList.remove('row-hl'));
+  document.querySelectorAll('.filter-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});
+  document.querySelectorAll('.outcome-filter-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});
+}
+function toggleCol(mi){
+  if(activeCol===mi){clearAll();return;}
+  clearAll();activeCol=mi;
+  const col=document.getElementById(`col-${mi}`);
+  col.classList.add('col-hl');
+  document.querySelectorAll('.cell').forEach(c=>{
+    parseInt(c.getAttribute('data-mi'))===mi?c.classList.add('highlighted'):c.classList.add('dimmed');
+  });
+}
+function toggleRow(ri){
+  if(activeRow===ri){clearAll();return;}
+  clearAll();activeRow=ri;
+  const row=document.getElementById(`row-${ri}`);
+  row.classList.add('row-hl');
+  document.querySelectorAll('.cell').forEach(c=>{
+    parseInt(c.getAttribute('data-ri'))===ri?c.classList.add('highlighted'):c.classList.add('dimmed');
+  });
+}
+function filterDept(dept){
+  if(activeDept===dept){clearAll();return;}
+  clearAll();activeDept=dept;
+  const labels={CXS:'Client',ET:'Enterprise',ISO:'Information',Infra:'Infrastructure',OCIO:'Office',RC:'Research',FS:'Financial'};
+  document.querySelectorAll('.filter-btn').forEach(b=>{if(b.textContent.trim().includes(labels[dept])){b.classList.add('active');b.setAttribute('aria-pressed','true');}});
+  document.querySelectorAll('tr[data-dept]').forEach(row=>{
+    const cells=row.querySelectorAll('.cell');
+    row.getAttribute('data-dept')!==dept?cells.forEach(c=>c.classList.add('dimmed')):cells.forEach(c=>c.classList.add('highlighted'));
+  });
+}
+
+function filterOutcome(outcome){
+  if(activeOutcome===outcome){clearAll();return;}
+  clearAll();activeOutcome=outcome;
+  document.querySelectorAll('.outcome-filter-btn').forEach(b=>{
+    if(b.getAttribute('onclick').includes("'"+outcome+"'")){b.classList.add('active');b.setAttribute('aria-pressed','true');}
+  });
+  document.querySelectorAll('.cell').forEach(c=>{
+    c.getAttribute('data-outcome')===outcome?c.classList.add('highlighted'):c.classList.add('dimmed');
+  });
+  MODALITIES.forEach((m,mi)=>{
+    const col=document.getElementById('col-'+mi);
+    if(col)m.outcome===outcome?col.classList.add('col-hl'):col.classList.remove('col-hl');
+  });
+}
+// ─── TOOLTIP ────────────────────────────────────────────────
+const tooltip=document.getElementById('tooltip');
+function outcomeTag(mod){
+  if(!mod.outcome)return'';
+  return`<span class="outcome-tag outcome-${mod.outcome}">${OUTCOME_LABELS[mod.outcome]}</span>`;
+}
+function showTooltip(e,role,mod,cell){
+  document.getElementById('tt-role').textContent=role.role.replace(/\n/,' ')+' · '+role.sub;
+  document.getElementById('tt-modality').textContent=mod.name.replace(/\n/,' ');
+  const sEl=document.getElementById('tt-strength');
+  sEl.textContent=cell.s===2?'Primary fit':'Secondary / emerging';
+  sEl.className='tt-strength s'+cell.s;
+  document.getElementById('tt-why').textContent=cell.why;
+  document.getElementById('tt-list').innerHTML=outcomeTag(mod)+cell.cases.map(c=>`<li>${c}</li>`).join('');
+  tooltip.classList.add('show');positionTooltip(e);
+}
+function hideTooltip(){tooltip.classList.remove('show');}
+function clearFocusContext(){
+  document.querySelectorAll('.row-header.focus-context').forEach(r=>r.classList.remove('focus-context'));
+  document.querySelectorAll('.col-header.focus-context').forEach(c=>c.classList.remove('focus-context'));
+}
+function positionTooltip(e){
+  let x=e.clientX+16,y=e.clientY-10;
+  if(x+340>window.innerWidth)x=e.clientX-340;
+  if(y+250>window.innerHeight)y=e.clientY-250;
+  tooltip.style.left=x+'px';tooltip.style.top=y+'px';
+}
+document.addEventListener('mousemove',e=>{if(tooltip.classList.contains('show'))positionTooltip(e);});
+
+// ─── SIDE PANEL ─────────────────────────────────────────────
+const panel=document.getElementById('info-panel');
+let lastFocused=null;
+function openPanel(role,mod,cell){
+  lastFocused=document.activeElement;
+  hideTooltip();
+  document.getElementById('panel-title').textContent=role.role.replace(/\n/,' ');
+  document.getElementById('panel-sub').textContent=mod.name.replace(/\n/,' ')+' · '+(cell.s===2?'Primary fit':'Secondary / emerging');
+  let html='';
+  html+=`<div class="panel-section"><div class="panel-section-title">All modalities for this team</div><div>`;
+  MODALITIES.forEach(m=>{const c=role.cells[m.id];if(c&&c.s>0)html+=`<span class="modality-pill s${c.s}">${m.name.replace(/\n/,' ')}</span>`;});
+  html+=`</div></div>`;
+  html+=`<div class="panel-section"><div class="panel-section-title">${mod.name.replace(/\n/,' ')} — use cases</div>`;
+  html+=`<div style="font-size:10px;color:#777;margin-bottom:10px;font-style:italic;line-height:1.6">${cell.why}</div>`;
+  cell.cases.forEach(c=>{html+=`<div class="use-case-item"><span class="outcome-tag outcome-${mod.outcome}">${OUTCOME_LABELS[mod.outcome]||''}</span><div class="uc-mod">${mod.name.replace(/\n/,' ')}</div>${c}</div>`;});
+  html+=`</div>`;
+  html+=`<div class="panel-section"><div class="panel-section-title">All use cases — ${role.role.replace(/\n/,' ')}</div>`;
+  MODALITIES.forEach(m=>{const c=role.cells[m.id];if(c&&c.s>0&&c.cases.length>0)c.cases.forEach(uc=>{html+=`<div class="use-case-item"><span class="outcome-tag outcome-${m.outcome}">${OUTCOME_LABELS[m.outcome]||''}</span><div class="uc-mod">${m.name.replace(/\n/,' ')}</div>${uc}</div>`;});});
+  html+=`</div>`;
+  document.getElementById('panel-content').innerHTML=html;
+  panel.classList.add('open');
+  panel.removeAttribute('inert');
+  panel.setAttribute('aria-hidden','false');
+  const closeBtn=panel.querySelector('.close-panel');
+  closeBtn.setAttribute('tabindex','0');
+  closeBtn.focus();
+}
+function closePanel(){
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden','true');
+  panel.setAttribute('inert','');
+  panel.querySelector('.close-panel').setAttribute('tabindex','-1');
+  if(lastFocused)lastFocused.focus();
+}
+function getFocusableInPanel(){
+  return panel.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+}
+document.addEventListener('keydown',e=>{
+  if(!panel.classList.contains('open'))return;
+  if(e.key==='Escape'){closePanel();return;}
+  if(e.key==='Tab'){
+    const focusables=getFocusableInPanel();
+    if(!focusables.length)return;
+    const first=focusables[0];
+    const last=focusables[focusables.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+});
+
+</script>
+</main>
+</body>
+</html>
