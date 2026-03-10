@@ -22,6 +22,8 @@
   header h1{font-family:'Fraunces',serif;font-size:24px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-0.4px;}
   header h1 em{font-weight:300;font-size:18px;font-style:italic;display:block;color:var(--ink-mid);margin-top:2px;}
   header p{font-size:10.5px;color:var(--ink-light);max-width:380px;line-height:1.65;}
+  .comp-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:5px 12px;border-radius:20px;transition:all 0.15s;white-space:nowrap;margin-top:8px;}
+  .comp-link:hover{background:var(--accent);color:#fff;}
   .legend{display:flex;gap:24px;padding:10px 40px;border-bottom:1px solid var(--rule);align-items:center;flex-wrap:wrap;background:var(--white);}
   .legend-item{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--ink-light);}
   .legend-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
@@ -118,7 +120,10 @@
       <h1>Stanford University IT<em>Team Functions × AI Modalities</em></h1>
     </div>
   </div>
-  <p>Use Tab to move through column headers, row headers, and interactive matrix cells. Press Enter or Space on a filled cell to open the use case panel. Filter by UIT unit using the buttons below.</p>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;">
+    <p>Use Tab to move through column headers, row headers, and interactive matrix cells. Press Enter or Space on a filled cell to open the use case panel. Filter by UIT unit using the buttons below.</p>
+    <a href="uit-ai-competencies.html" class="comp-link">AI Competencies Framework →</a>
+  </div>
 </header>
 <main id="main-content">
 <div class="legend" role="note" aria-label="Matrix legend">

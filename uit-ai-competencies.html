@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stanford UIT — AI Competencies Framework</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f7f4ef;
+    --ink: #1c1917;
+    --ink-mid: #44403c;
+    --ink-light: #726b66;
+    --rule: #e2ddd6;
+    --white: #ffffff;
+    --accent: #8c1515;
+    --accent-light: #fdf2f2;
+    --lagunita: #007c92;
+    --lagunita-light: #eef6f8;
+    --plum: #620059;
+    --plum-light: #f5eef5;
+    --stone: #7f7776;
+    --stone-light: #f5f0eb;
+    --fog: #dad7cb;
+    --cream: #f7f4ef;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  .skip-link { position: absolute; top: -100px; left: 16px; background: var(--ink); color: #fff; padding: 8px 16px; border-radius: 4px; font-size: 0.875rem; text-decoration: none; z-index: 9999; transition: top 0.2s; }
+  .skip-link:focus { top: 16px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 28px 40px 18px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    background: var(--white);
+  }
+  .header-left { display: flex; align-items: flex-end; gap: 20px; }
+  .stanford-bar { width: 6px; height: 60px; background: var(--accent); border-radius: 3px; flex-shrink: 0; }
+  header h1 { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1.15; letter-spacing: -0.4px; }
+  header h1 em { font-weight: 300; font-size: 18px; font-style: italic; display: block; color: var(--ink-mid); margin-top: 2px; }
+  header p { font-size: 10.5px; color: var(--ink-light); max-width: 400px; line-height: 1.65; }
+  .matrix-link { display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); text-decoration: none; border: 1.5px solid var(--accent); padding: 6px 14px; border-radius: 20px; transition: all 0.15s; white-space: nowrap; }
+  .matrix-link:hover { background: var(--accent); color: #fff; }
+
+  /* ── Intro / Tier legend ── */
+  .intro { padding: 28px 40px 0; max-width: 960px; }
+  .intro-text { font-size: 11px; color: var(--ink-mid); line-height: 1.75; margin-bottom: 24px; max-width: 680px; }
+  .tier-legend { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  .tier-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; border-radius: 8px;
+    flex: 1; min-width: 180px; max-width: 240px;
+    border: 1.5px solid var(--rule);
+    background: var(--white);
+  }
+  .tier-pip { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .pip-aware { background: var(--stone); }
+  .pip-practitioner { background: var(--lagunita); }
+  .pip-fluent { background: var(--accent); }
+  .tier-pill-name { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 600; color: var(--ink); display: block; }
+  .tier-pill-desc { font-size: 9px; color: var(--ink-light); display: block; margin-top: 2px; line-height: 1.5; }
+
+  /* ── Outcome badges ── */
+  .outcome-badge { display: inline-block; font-size: 8px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; }
+  .ob-time { background: var(--stone-light); color: var(--stone); }
+  .ob-capacity { background: var(--lagunita-light); color: var(--lagunita); }
+  .ob-new { background: var(--accent-light); color: var(--accent); }
+
+  /* ── Modality cards grid ── */
+  .modalities { padding: 0 40px 60px; display: flex; flex-direction: column; gap: 16px; }
+
+  .mod-card {
+    background: var(--white);
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+  }
+  .mod-card:hover { box-shadow: 0 4px 20px rgba(28,25,23,0.08); }
+
+  .mod-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1.5px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .mod-card.open .mod-header { border-bottom-color: var(--rule); background: var(--bg); }
+
+  .mod-accent-bar { width: 4px; height: 40px; border-radius: 2px; flex-shrink: 0; }
+  .mod-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--ink); flex: 1; }
+  .mod-tag { font-size: 9px; padding: 2px 8px; border-radius: 10px; background: var(--rule); color: var(--ink-light); letter-spacing: 0.3px; white-space: nowrap; }
+  .mod-outcome { flex-shrink: 0; }
+  .mod-chevron { font-size: 11px; color: var(--ink-light); transition: transform 0.2s; flex-shrink: 0; }
+  .mod-card.open .mod-chevron { transform: rotate(180deg); }
+
+  /* Tier pills mini-row (collapsed view) */
+  .mod-tier-preview { display: flex; gap: 6px; align-items: center; }
+  .tier-mini { font-size: 8.5px; padding: 2px 9px; border-radius: 10px; letter-spacing: 0.3px; white-space: nowrap; }
+  .tm-aware { background: var(--stone-light); color: var(--stone); }
+  .tm-practitioner { background: var(--lagunita-light); color: var(--lagunita); }
+  .tm-fluent { background: var(--accent-light); color: var(--accent); }
+
+  /* ── Expanded tier content ── */
+  .mod-body { display: none; padding: 20px; gap: 16px; }
+  .mod-card.open .mod-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  @media (max-width: 800px) {
+    .mod-card.open .mod-body { grid-template-columns: 1fr; }
+  }
+
+  .tier-block {
+    border-radius: 8px;
+    padding: 16px;
+    border: 1.5px solid var(--rule);
+  }
+  .tier-block-aware { border-top: 3px solid var(--stone); }
+  .tier-block-practitioner { border-top: 3px solid var(--lagunita); }
+  .tier-block-fluent { border-top: 3px solid var(--accent); }
+
+  .tier-block-title {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .tier-block-title .pip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tier-block-title span {
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .tier-summary {
+    font-size: 9.5px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+
+  .tier-indicators { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .tier-indicators li {
+    font-size: 10px;
+    color: var(--ink);
+    line-height: 1.55;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: var(--bg);
+    position: relative;
+    padding-left: 18px;
+  }
+  .tier-indicators li::before { content: '→'; position: absolute; left: 6px; color: var(--ink-light); font-size: 9px; top: 8px; }
+  .tier-block-practitioner .tier-indicators li::before { color: var(--lagunita); }
+  .tier-block-fluent .tier-indicators li::before { color: var(--accent); }
+
+  .tier-milestone {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 9px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .tier-block-aware .tier-milestone { background: var(--stone-light); color: var(--stone); }
+  .tier-block-practitioner .tier-milestone { background: var(--lagunita-light); color: var(--lagunita); }
+  .tier-block-fluent .tier-milestone { background: var(--accent-light); color: var(--accent); }
+
+  /* ── Learning path note ── */
+  .learning-note {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--rule);
+    font-size: 9px;
+    color: var(--ink-light);
+    line-height: 1.65;
+    font-style: italic;
+  }
+
+  /* ── Focus styles ── */
+  .mod-header:focus-visible { outline: 3px solid var(--accent); outline-offset: -2px; }
+
+  /* ── Not everyone needs Fluent callout ── */
+  .caveat-bar {
+    margin: 0 40px 20px;
+    padding: 14px 18px;
+    background: var(--white);
+    border: 1.5px solid var(--rule);
+    border-left: 4px solid var(--lagunita);
+    border-radius: 6px;
+    font-size: 10px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+  }
+  .caveat-bar strong { color: var(--lagunita); }
+
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<header role="banner">
+  <div class="header-left">
+    <div class="stanford-bar" aria-hidden="true"></div>
+    <div>
+      <h1>Stanford University IT<em>AI Competencies Framework</em></h1>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+    <p>Three tiers of AI proficiency across seven modalities — what staff at each stage can do, recognize, and teach.</p>
+    <a href="stanford-uit-ai-matrix-v2.html" class="matrix-link">← AI Modalities Matrix</a>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="intro">
+  <p class="intro-text">
+    This framework describes what genuine AI proficiency looks like at each stage — not as a reading list, but as <strong>observable behaviors</strong>. Each modality has three tiers: <em>Aware</em>, <em>Practitioner</em>, and <em>Fluent</em>. Staff don't need to reach Fluent in every modality — the goal is depth in the two or three modalities most relevant to their role, and honest Aware-level orientation to the rest.
+  </p>
+
+  <div class="tier-legend" role="list" aria-label="Proficiency tiers">
+    <div class="tier-pill" role="listitem">
+      <div class="tier-pip pip-aware" aria-hidden="true"></div>
+      <div>
+        <span class="tier-pill-name">Aware</span>
+        <span class="tier-pill-desc">I can describe this modality, recognize when it applies, and explain a real example from my team's work. I'm not building yet.</span>
+      </div>
+    </div>
+    <div class="tier-pill" role="listitem">
+      <div class="tier-pip pip-practitioner" aria-hidden="true"></div>
+      <div>
+        <span class="tier-pill-name">Practitioner</span>
+        <span class="tier-pill-desc">I can run tasks using this modality, evaluate output quality, recover when it fails, and teach a colleague the basics.</span>
+      </div>
+    </div>
+    <div class="tier-pill" role="listitem">
+      <div class="tier-pip pip-fluent" aria-hidden="true"></div>
+      <div>
+        <span class="tier-pill-name">Fluent</span>
+        <span class="tier-pill-desc">I design my own workflows, combine modalities, and know where the approach breaks down. Others come to me with novel use cases.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="caveat-bar" role="note">
+  <strong>Not everyone needs to reach Fluent in every modality.</strong> Conversational AI and Language Generation have the fastest ramps — most staff can reach Practitioner in a single focused session. Predictive Analytics and Intelligent Automation are steeper and realistically require technical depth to reach Fluent. The goal is intentional: know your two or three priority modalities and go deep there.
+</div>
+
+<div class="modalities" id="modalities-list" role="list">
+  <!-- Cards injected by JS -->
+</div>
+
+</main>
+
+<script>
+const MODALITIES = [
+  {
+    id: 'conv',
+    name: 'Conversational AI',
+    tag: 'Chat / Agents',
+    outcome: 'time',
+    accentColor: '#007c92',
+    ramp: 'Fast — most staff reach Practitioner in one focused session.',
+    aware: {
+      summary: "You understand that Conversational AI is about back-and-forth dialogue — not single prompts — and that it works best on ambiguous, emotionally varied, or context-heavy requests.",
+      indicators: [
+        "Can describe what makes a conversational interface different from a search bar",
+        "Can name one realistic use case from their own team (e.g., ticket triage, onboarding Q&A)",
+        "Understands that tone, role, and context in the opening prompt shapes the whole conversation",
+        "Can explain why a generic chatbot fails on Stanford-specific questions (Cardinal Key, SUNetID, Axess)"
+      ],
+      milestone: "Milestone: Leads a 5-minute team conversation explaining what AI chat agents can and cannot do."
+    },
+    practitioner: {
+      summary: "You can run a real task using a conversational interface, craft a system prompt, evaluate whether the response is usable, and iterate when it isn't.",
+      indicators: [
+        "Writes a system prompt that sets role, audience, constraints, and tone",
+        "Uses multi-turn conversation to refine an output rather than re-prompting from scratch",
+        "Can tell when an output is plausible-but-wrong and knows how to challenge it",
+        "Has used a conversational AI tool to handle a real work task (not just a demo)",
+        "Can teach a colleague how to write their first effective prompt"
+      ],
+      milestone: "Milestone: Completes a real work task end-to-end — drafts, evaluates output, and ships a result."
+    },
+    fluent: {
+      summary: "You design conversational agent workflows, define escalation paths, and can articulate precisely where the approach breaks down and why.",
+      indicators: [
+        "Has designed a multi-step agent flow (e.g., triage → resolution attempt → escalation with context)",
+        "Can specify when a task should stay with an agent vs. hand off to a human",
+        "Understands hallucination patterns specific to the domain and has mitigation strategies",
+        "Can evaluate a vendor's conversational AI product against a real use case",
+        "Others bring them novel or failing agent scenarios to troubleshoot"
+      ],
+      milestone: "Milestone: Has shipped a working agent or workflow that others on their team now use regularly."
+    }
+  },
+  {
+    id: 'langgen',
+    name: 'Language Generation',
+    tag: 'Drafting / Writing',
+    outcome: 'time',
+    accentColor: '#007c92',
+    ramp: 'Fast — practical results from day one with basic prompting.',
+    aware: {
+      summary: "You understand that Language Generation is for producing written content — and that the quality of output depends entirely on the specificity of the input.",
+      indicators: [
+        "Can describe what Language Generation is useful for (drafting, summarizing, reformatting)",
+        "Understands that vague prompts produce generic output",
+        "Can name two tasks in their own role where drafting is time-consuming",
+        "Knows the difference between generating from scratch and editing AI-generated output"
+      ],
+      milestone: "Milestone: Identifies three drafting tasks in their own role that could be meaningfully accelerated."
+    },
+    practitioner: {
+      summary: "You can use Language Generation to produce real work output — not just drafts you then rewrite from scratch, but content that genuinely reduces your time to done.",
+      indicators: [
+        "Provides specific context (audience, purpose, tone, length) in every generation prompt",
+        "Uses examples (few-shot) to steer the style toward what they actually need",
+        "Edits AI output efficiently — knows what to keep, cut, and rewrite",
+        "Has generated content (KB article, incident update, training material, email) used in production",
+        "Can review AI-generated text for accuracy, tone drift, and brand alignment"
+      ],
+      milestone: "Milestone: Produces a real piece of work output (KB article, status update, brief) using generation that others have accepted and used."
+    },
+    fluent: {
+      summary: "You design generation workflows for your team — prompt templates, review checkpoints, and quality criteria — so generation scales beyond individual use.",
+      indicators: [
+        "Has created reusable prompt templates for their team's most common writing tasks",
+        "Can define measurable quality criteria for generated output in their domain",
+        "Understands where generation reliably fails (technical accuracy, nuanced tone, institutional context)",
+        "Can review another person's generation workflow and identify where it's losing quality",
+        "Has built a generation pipeline — e.g., templates + review + approval — that others follow"
+      ],
+      milestone: "Milestone: Team uses a generation workflow they designed — prompt templates, review criteria, and a feedback loop."
+    }
+  },
+  {
+    id: 'synth',
+    name: 'Synthesis & Analysis',
+    tag: 'Summarization',
+    outcome: 'capacity',
+    accentColor: '#620059',
+    ramp: 'Moderate — the hardest part is learning to ask interpretive questions, not just summary requests.',
+    aware: {
+      summary: "You understand that Synthesis goes beyond summarizing — it means identifying patterns, surfacing tensions, and drawing meaning from large, unstructured sources.",
+      indicators: [
+        "Can explain the difference between a summary and a synthesis",
+        "Can name a source of unstructured data in their work (tickets, survey responses, call transcripts, feedback)",
+        "Understands that synthesis output needs human review for interpretation accuracy",
+        "Can describe one team use case where pattern-finding across many inputs would change a decision"
+      ],
+      milestone: "Milestone: Articulates one decision their team makes slowly because synthesizing the underlying data is manual and time-consuming."
+    },
+    practitioner: {
+      summary: "You can direct a synthesis task — provide the right inputs, ask the right interpretive question, and evaluate whether the themes surfaced are real and actionable.",
+      indicators: [
+        "Provides well-scoped input and a specific interpretive question (not just 'summarize this')",
+        "Reviews synthesis output to validate that themes reflect the actual source material",
+        "Has used synthesis on a real dataset — ticket clusters, survey results, feedback themes",
+        "Knows when synthesis is producing a hallucinated pattern vs. a real one",
+        "Can turn a synthesis output into a decision-support brief for their manager"
+      ],
+      milestone: "Milestone: Runs a synthesis task on real team data and uses the output to inform a recommendation or decision."
+    },
+    fluent: {
+      summary: "You design synthesis workflows for recurring insight needs — not one-off analyses, but repeatable processes that keep leadership informed.",
+      indicators: [
+        "Has built a recurring synthesis workflow (e.g., weekly ticket theme report, quarterly voice-of-user brief)",
+        "Can define the right input structure so synthesis produces consistent, reliable themes",
+        "Understands the failure modes: cherry-picking, hallucinated patterns, loss of outlier signal",
+        "Can specify when human interpretation must override the AI's framing",
+        "Others come to them to design synthesis approaches for novel data sources"
+      ],
+      milestone: "Milestone: A recurring synthesis workflow they designed now runs regularly and informs a leadership decision or operational process."
+    }
+  },
+  {
+    id: 'auto',
+    name: 'Intelligent Automation',
+    tag: 'Agentic Workflows',
+    outcome: 'capacity',
+    accentColor: '#620059',
+    ramp: 'Steep — Practitioner requires comfort with system integration; Fluent requires technical depth.',
+    aware: {
+      summary: "You understand that Intelligent Automation is about multi-step workflows that act — not just answer — and that human oversight at decision points is essential.",
+      indicators: [
+        "Can explain the difference between automation (rule-based) and intelligent automation (context-aware)",
+        "Can describe one workflow in their team where a sequence of decisions repeats at scale",
+        "Understands what 'human in the loop' means and can identify where it's needed in a workflow",
+        "Knows that autonomous agents require guardrails — they don't just 'run'"
+      ],
+      milestone: "Milestone: Maps one workflow in their team as: trigger → steps → decisions → human escalation points."
+    },
+    practitioner: {
+      summary: "You can configure or contribute to an automation workflow — define the trigger, the steps, and the escalation logic — and evaluate whether it's behaving as intended.",
+      indicators: [
+        "Has contributed to defining a workflow (even verbally) that an engineer or tool then implemented",
+        "Can define the conditions under which an automation should escalate vs. self-resolve",
+        "Understands what happens when an automation hits an edge case and can describe the failure mode",
+        "Has evaluated an automation's output — not just 'did it run' but 'did it do the right thing'",
+        "Can articulate the ROI of a specific automation in their domain (time saved, volume handled)"
+      ],
+      milestone: "Milestone: Has specified or evaluated a real automation that handles a recurring task in their team."
+    },
+    fluent: {
+      summary: "You design and own end-to-end intelligent automation workflows — from trigger definition to escalation logic to monitoring and iteration.",
+      indicators: [
+        "Has shipped an automation that handles real volume (tickets, requests, alerts, approvals) without human review of every case",
+        "Designed the escalation logic — not just 'escalate if stuck' but specific conditions and context-passing",
+        "Monitors automation health and can diagnose when a workflow is behaving unexpectedly",
+        "Can evaluate an automation platform or vendor against a real UIT use case",
+        "Others come to them to design new automation workflows or troubleshoot existing ones"
+      ],
+      milestone: "Milestone: Owns a production automation — it runs, they monitor it, and they iterate on it based on performance data."
+    }
+  },
+  {
+    id: 'rag',
+    name: 'Retrieval & Knowledge',
+    tag: 'RAG / Search',
+    outcome: 'time',
+    accentColor: '#007c92',
+    ramp: 'Moderate — Aware is fast; Practitioner requires understanding of source quality and retrieval grounding.',
+    aware: {
+      summary: "You understand that Retrieval-Augmented Generation grounds AI answers in actual documents — and that the quality of the source determines the quality of the answer.",
+      indicators: [
+        "Can explain why a RAG system answers differently than a general-purpose LLM",
+        "Understands that retrieval fails when the source documents are outdated, sparse, or poorly written",
+        "Can describe one place in their work where finding the right document takes longer than it should",
+        "Knows the difference between 'the AI made this up' and 'the AI retrieved this from a real source'"
+      ],
+      milestone: "Milestone: Can explain to a colleague why grounding AI in UIT's own documentation matters, with a specific example."
+    },
+    practitioner: {
+      summary: "You can evaluate a retrieval system's output — check the source, assess whether the retrieved content actually answers the question, and flag when it doesn't.",
+      indicators: [
+        "Checks the source citation when a RAG system returns an answer — doesn't accept it on trust alone",
+        "Has used a RAG-based tool (KB search, documentation assistant) for a real work task",
+        "Can identify when a retrieval result is technically accurate but contextually wrong for the question",
+        "Understands that retrieval quality depends on KB article quality — good input, good output",
+        "Has contributed to improving a KB article or documentation because it was producing bad retrieval"
+      ],
+      milestone: "Milestone: Used a retrieval-grounded tool for a real task, evaluated the source, and either accepted or corrected the result."
+    },
+    fluent: {
+      summary: "You can design and evaluate a retrieval system — source selection, chunking strategy, quality criteria for documents, and how to test whether retrieval is actually helping.",
+      indicators: [
+        "Can specify what makes a good source document for a retrieval corpus (freshness, specificity, structure)",
+        "Understands how chunking and embedding affect retrieval quality and can make design trade-offs",
+        "Has evaluated a RAG system against real queries from their domain and can describe where it fails",
+        "Can define a testing methodology: what queries, what ground-truth answers, what success looks like",
+        "Others come to them to advise on source selection, document quality, or retrieval evaluation"
+      ],
+      milestone: "Milestone: Has evaluated or contributed to the design of a retrieval corpus — source selection, quality criteria, or test queries."
+    }
+  },
+  {
+    id: 'multi',
+    name: 'Multimodal AI',
+    tag: 'Vision / Audio / Docs',
+    outcome: 'capacity',
+    accentColor: '#620059',
+    ramp: 'Moderate — accessible entry points (image analysis, transcription) but deep use requires domain specificity.',
+    aware: {
+      summary: "You understand that Multimodal AI processes images, audio, and documents — not just text — and that this opens up tasks that text-only AI simply cannot touch.",
+      indicators: [
+        "Can name at least two input types beyond text that multimodal AI can process",
+        "Can describe one task in their role that involves non-text content (screenshots, PDFs, recordings, images)",
+        "Understands that accuracy varies significantly by domain — medical imaging vs. general screenshots",
+        "Can explain why auto-generated alt-text or captions still need human review"
+      ],
+      milestone: "Milestone: Identifies two tasks in their team involving non-text content that multimodal processing could accelerate."
+    },
+    practitioner: {
+      summary: "You can use multimodal AI tools on real work tasks — analyze an image, process a document, generate a transcript — and evaluate whether the output is accurate enough to act on.",
+      indicators: [
+        "Has used a multimodal tool (image analysis, PDF extraction, audio transcription) for a real work task",
+        "Reviews multimodal output before acting on it — doesn't assume the AI read the document correctly",
+        "Can describe the failure mode specific to their use case (OCR errors, misidentified layout, caption drift)",
+        "Uses multimodal output to accelerate their work, not to replace human review entirely",
+        "Can explain to a colleague when a multimodal tool is and isn't the right approach"
+      ],
+      milestone: "Milestone: Completes a real task using multimodal input — processes a document, image, or recording and acts on the output."
+    },
+    fluent: {
+      summary: "You design workflows that incorporate multimodal processing — defining when it applies, what accuracy is acceptable, and where human review must intervene.",
+      indicators: [
+        "Has designed a workflow that processes non-text inputs at scale (e.g., auto-alt-text pipeline, call transcription review)",
+        "Can specify accuracy thresholds for their domain — what error rate is acceptable, what isn't",
+        "Understands the technical trade-offs: model capabilities, prompt engineering for vision, cost per processing",
+        "Has evaluated a multimodal vendor or tool against a real UIT use case with defined success criteria",
+        "Others come to them to assess whether multimodal processing is the right approach for a use case"
+      ],
+      milestone: "Milestone: Has shipped or specified a multimodal processing workflow that runs at real scale in their team."
+    }
+  },
+  {
+    id: 'pred',
+    name: 'Predictive Analytics',
+    tag: 'ML / Forecasting',
+    outcome: 'new',
+    accentColor: '#8c1515',
+    ramp: 'Steep — Practitioner requires statistical literacy; Fluent requires data science or engineering depth.',
+    aware: {
+      summary: "You understand that Predictive Analytics uses historical data to forecast future states — and that predictions are probabilities, not certainties.",
+      indicators: [
+        "Can explain the difference between descriptive (what happened) and predictive (what will happen) analytics",
+        "Can name one operational decision in their team that would be better with a forecast (staffing, demand, risk)",
+        "Understands that predictions are only as good as the data they're trained on",
+        "Knows what 'false positive' and 'false negative' mean and why both matter in their domain"
+      ],
+      milestone: "Milestone: Identifies one operational decision in their team that could be improved with better forecasting."
+    },
+    practitioner: {
+      summary: "You can work with predictive outputs — interpret a forecast, evaluate its confidence level, identify where the model is likely wrong, and use predictions to inform (not replace) decisions.",
+      indicators: [
+        "Can read a model output and explain what it is predicting and with what confidence",
+        "Understands that correlation is not causation and can spot a spurious pattern",
+        "Has used a predictive tool or dashboard (demand forecast, churn score, anomaly alert) in a real decision",
+        "Can identify the conditions under which a model's predictions are least reliable",
+        "Can brief a non-technical stakeholder on what a prediction means and what it doesn't"
+      ],
+      milestone: "Milestone: Has used a predictive output to inform a real decision and can explain what would change if the prediction were wrong."
+    },
+    fluent: {
+      summary: "You can scope, evaluate, and commission predictive models — define the question, specify the data requirements, and assess model performance against real outcomes.",
+      indicators: [
+        "Can write a clear problem statement for a predictive model: outcome to predict, features available, success criteria",
+        "Understands model selection trade-offs for their domain (interpretability vs. accuracy, training data requirements)",
+        "Can evaluate a model's performance using precision, recall, and confusion matrix outputs",
+        "Has worked with a data scientist or ML engineer to commission or review a model",
+        "Others come to them to scope predictive use cases or evaluate model outputs"
+      ],
+      milestone: "Milestone: Has scoped or evaluated a predictive model — defined the question, assessed the inputs, and reviewed the performance results."
+    }
+  }
+];
+
+const OUTCOME_LABELS = { time: 'Time Saved', capacity: 'Capacity Expanded', new: 'New Capability Unlocked' };
+const OUTCOME_CLASS = { time: 'ob-time', capacity: 'ob-capacity', new: 'ob-new' };
+
+function buildCard(mod, index) {
+  const card = document.createElement('div');
+  card.className = 'mod-card';
+  card.setAttribute('role', 'listitem');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'mod-header';
+  header.setAttribute('tabindex', '0');
+  header.setAttribute('aria-expanded', 'false');
+  header.setAttribute('aria-controls', `mod-body-${mod.id}`);
+  header.setAttribute('role', 'button');
+  header.setAttribute('aria-label', `${mod.name} — expand competency tiers`);
+
+  header.innerHTML = `
+    <div class="mod-accent-bar" style="background:${mod.accentColor}" aria-hidden="true"></div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+        <span class="mod-name">${mod.name}</span>
+        <span class="mod-tag">${mod.tag}</span>
+        <span class="outcome-badge ${OUTCOME_CLASS[mod.outcome]}">${OUTCOME_LABELS[mod.outcome]}</span>
+      </div>
+      <div class="mod-tier-preview" aria-hidden="true">
+        <span class="tier-mini tm-aware">Aware</span>
+        <span style="color:var(--rule);font-size:9px;">›</span>
+        <span class="tier-mini tm-practitioner">Practitioner</span>
+        <span style="color:var(--rule);font-size:9px;">›</span>
+        <span class="tier-mini tm-fluent">Fluent</span>
+      </div>
+    </div>
+    <span class="mod-chevron" aria-hidden="true">▾</span>
+  `;
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'mod-body';
+  body.id = `mod-body-${mod.id}`;
+
+  const tiers = [
+    { key: 'aware',        label: 'Aware',        cls: 'tier-block-aware',        pipColor: 'var(--stone)' },
+    { key: 'practitioner', label: 'Practitioner',  cls: 'tier-block-practitioner', pipColor: 'var(--lagunita)' },
+    { key: 'fluent',       label: 'Fluent',         cls: 'tier-block-fluent',       pipColor: 'var(--accent)' },
+  ];
+
+  tiers.forEach(t => {
+    const data = mod[t.key];
+    const block = document.createElement('div');
+    block.className = `tier-block ${t.cls}`;
+    block.innerHTML = `
+      <div class="tier-block-title">
+        <div class="pip" style="background:${t.pipColor}" aria-hidden="true"></div>
+        <span>${t.label}</span>
+      </div>
+      <p class="tier-summary">${data.summary}</p>
+      <ul class="tier-indicators" aria-label="${t.label} indicators for ${mod.name}">
+        ${data.indicators.map(i => `<li>${i}</li>`).join('')}
+      </ul>
+      <div class="tier-milestone">${data.milestone}</div>
+    `;
+    body.appendChild(block);
+  });
+
+  // Learning path note
+  const note = document.createElement('div');
+  note.className = 'learning-note';
+  note.innerHTML = `<strong>Learning ramp:</strong> ${mod.ramp}`;
+  note.style.gridColumn = '1 / -1';
+  body.appendChild(note);
+
+  card.appendChild(header);
+  card.appendChild(body);
+
+  // Toggle
+  function toggle() {
+    const isOpen = card.classList.contains('open');
+    card.classList.toggle('open', !isOpen);
+    header.setAttribute('aria-expanded', String(!isOpen));
+  }
+
+  header.addEventListener('click', toggle);
+  header.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+
+  return card;
+}
+
+const list = document.getElementById('modalities-list');
+MODALITIES.forEach((mod, i) => list.appendChild(buildCard(mod, i)));
+
+// Open first card by default
+const firstCard = list.querySelector('.mod-card');
+if (firstCard) {
+  firstCard.classList.add('open');
+  firstCard.querySelector('.mod-header').setAttribute('aria-expanded', 'true');
+}
+</script>
+</body>
+</html>
