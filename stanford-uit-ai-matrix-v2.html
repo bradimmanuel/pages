@@ -88,6 +88,9 @@
   #info-panel .modality-pill.s1{background:var(--cell-1);color:var(--ink);border:1px solid #e8a0a0;}
   .close-panel{position:absolute;top:16px;right:16px;background:none;border:1.5px solid var(--rule);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:13px;color:var(--ink-light);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
   .close-panel:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .panel-copy-btn{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9.5px;padding:4px 12px;border-radius:14px;border:1.5px solid var(--rule);background:var(--white);color:var(--ink-mid);cursor:pointer;transition:all 0.15s;margin-top:6px;margin-bottom:2px;}
+  .panel-copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .panel-copy-btn.copied{border-color:#007c92;color:#007c92;}
   .use-case-item{padding:8px 10px;border-radius:6px;background:var(--bg);margin-bottom:6px;font-size:10px;line-height:1.55;color:var(--ink);border-left:3px solid var(--accent);}
   .use-case-item .uc-mod{font-size:9px;color:var(--ink-light);margin-bottom:2px;}
   .outcome-tag{display:inline-block;font-size:8px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:2px 7px;border-radius:10px;margin-bottom:5px;}
@@ -105,6 +108,62 @@
   .outcome-filter-btn.of-capacity:hover,.outcome-filter-btn.of-capacity.active{background:#eef6f8;border-color:#007c92;color:#007c92;}
   .outcome-filter-btn.of-new{color:#8c1515;border-color:#d88080;}
   .outcome-filter-btn.of-new:hover,.outcome-filter-btn.of-new.active{background:#fdf2f2;border-color:#8c1515;color:#8c1515;}
+
+  /* ── Matrix export feature ── */
+  .export-controls{padding:8px 40px 10px;border-bottom:1px solid var(--rule);display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--white);}
+  .export-controls span{font-size:10px;color:var(--ink-light);margin-right:4px;}
+  .exp-sel-btn{font-family:'DM Mono',monospace;font-size:10px;padding:4px 12px;border-radius:16px;border:1.5px solid var(--rule);background:var(--white);color:var(--ink-mid);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+  .exp-sel-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .exp-sel-btn.esb-time:hover,.exp-sel-btn.esb-time.active{background:#f5f0eb;border-color:#7f7776;color:#7f7776;}
+  .exp-sel-btn.esb-capacity:hover,.exp-sel-btn.esb-capacity.active{background:#eef6f8;border-color:#007c92;color:#007c92;}
+  .exp-sel-btn.esb-new:hover,.exp-sel-btn.esb-new.active{background:#fdf2f2;border-color:#8c1515;color:#8c1515;}
+  .exp-divider{width:1px;height:18px;background:var(--rule);flex-shrink:0;}
+  .str-toggle{font-family:'DM Mono',monospace;font-size:9px;padding:3px 9px;border-radius:12px;border:1.5px solid var(--rule);background:var(--bg);cursor:pointer;transition:all 0.15s;white-space:nowrap;color:var(--ink-mid);}
+  .str-toggle.on{background:var(--accent-light);border-color:var(--accent);color:var(--accent);font-weight:500;}
+  .export-team-row{padding:5px 40px 10px;border-bottom:1px solid var(--rule);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--white);}
+  .export-team-row span{font-size:10px;color:var(--ink-light);margin-right:4px;}
+  .team-exp-btn{font-family:'DM Mono',monospace;font-size:9.5px;padding:3px 11px;border-radius:14px;border:1.5px solid var(--rule);background:var(--white);color:var(--ink-mid);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+  .team-exp-btn:hover{border-color:var(--ink-mid);color:var(--ink);}
+  .team-exp-btn.active{background:var(--ink);border-color:var(--ink);color:var(--white);}
+
+  /* Checkbox on col headers */
+  .col-export-cb{display:block;width:13px;height:13px;accent-color:var(--accent);cursor:pointer;margin:0 auto 4px;}
+  th.col-header.exp-selected{background:var(--accent-light)!important;}
+  th.col-header.exp-selected .modality-tag{background:var(--accent);color:#fff;}
+
+  /* Floating bar */
+  #matrix-export-float{
+    position:fixed;bottom:28px;left:50%;
+    transform:translateX(-50%) translateY(80px);
+    z-index:200;background:var(--ink);color:var(--white);
+    border-radius:40px;padding:10px 16px;
+    display:flex;align-items:center;gap:12px;font-size:10px;
+    box-shadow:0 8px 32px rgba(28,25,23,0.3);
+    transition:transform 0.25s cubic-bezier(0.16,1,0.3,1),opacity 0.2s;
+    opacity:0;pointer-events:none;white-space:nowrap;
+  }
+  #matrix-export-float.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:all;}
+  #matrix-export-count{color:rgba(255,255,255,0.6);font-size:9px;}
+  .mexp-copy-btn{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:6px 16px;border-radius:20px;border:none;background:var(--accent);color:#fff;cursor:pointer;transition:background 0.15s;}
+  .mexp-copy-btn:hover{background:#a01818;}
+  .mexp-copy-btn.copied{background:#007c92;}
+  .mexp-clear-btn{font-family:'DM Mono',monospace;font-size:9.5px;padding:5px 12px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.25);background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.15s;}
+  .mexp-clear-btn:hover{border-color:rgba(255,255,255,0.6);color:#fff;}
+
+  /* Modal */
+  #matrix-export-overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,0.5);z-index:300;align-items:center;justify-content:center;}
+  #matrix-export-overlay.open{display:flex;}
+  #matrix-export-modal{background:var(--white);border-radius:12px;padding:28px;width:min(700px,90vw);max-height:82vh;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 60px rgba(28,25,23,0.25);}
+  #matrix-export-modal h2{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--ink);}
+  #matrix-export-modal-sub{font-size:10px;color:var(--ink-light);margin-top:-10px;}
+  #matrix-export-text{flex:1;font-family:'DM Mono',monospace;font-size:10px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--rule);border-radius:6px;padding:14px;resize:none;min-height:340px;overflow-y:auto;white-space:pre-wrap;}
+  .mexp-modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .mexp-modal-copy{font-family:'DM Mono',monospace;font-size:10.5px;padding:8px 20px;border-radius:20px;border:none;background:var(--accent);color:#fff;cursor:pointer;transition:background 0.15s;font-weight:500;}
+  .mexp-modal-copy:hover{background:#a01818;}
+  .mexp-modal-copy.copied{background:#007c92;}
+  .mexp-modal-close{font-family:'DM Mono',monospace;font-size:10.5px;padding:8px 20px;border-radius:20px;border:1.5px solid var(--rule);background:var(--white);color:var(--ink-mid);cursor:pointer;transition:all 0.15s;}
+  .mexp-modal-close:hover{border-color:var(--ink);color:var(--ink);}
+
   .filter-btn:focus-visible,.clear-btn:focus-visible,td.cell:focus-visible,th.col-header:focus-visible,th.row-header:focus-visible,.close-panel:focus-visible{outline:3px solid #8c1515;outline-offset:2px;}
   #info-panel:focus{outline:none;}
 
@@ -149,6 +208,47 @@
   <button class="outcome-filter-btn of-capacity" aria-pressed="false" onclick="filterOutcome('capacity')">Capacity Expanded</button>
   <button class="outcome-filter-btn of-new" aria-pressed="false" onclick="filterOutcome('new')">New Capability Unlocked</button>
 </div>
+<div class="export-controls" role="group" aria-label="Select modalities to export">
+  <span>Export:</span>
+  <button class="exp-sel-btn" onclick="mexpSelectAll()">All modalities</button>
+  <button class="exp-sel-btn esb-time" onclick="mexpSelectOutcome('time')">Time Saved</button>
+  <button class="exp-sel-btn esb-capacity" onclick="mexpSelectOutcome('capacity')">Capacity Expanded</button>
+  <button class="exp-sel-btn esb-new" onclick="mexpSelectOutcome('new')">New Capability</button>
+  <div class="exp-divider" aria-hidden="true"></div>
+  <span style="font-size:10px;color:var(--ink-light);">Include:</span>
+  <button class="str-toggle on" id="st-primary" onclick="mexpToggleStrength(2)" aria-pressed="true">Primary</button>
+  <button class="str-toggle on" id="st-secondary" onclick="mexpToggleStrength(1)" aria-pressed="true">Secondary</button>
+</div>
+
+<div class="export-team-row" role="group" aria-label="Filter export by team">
+  <span>Team:</span>
+  <button class="team-exp-btn active" id="teb-all" onclick="mexpFilterTeam(null)">All teams</button>
+  <button class="team-exp-btn" id="teb-CXS" onclick="mexpFilterTeam('CXS')">Client Experience &amp; Solutions</button>
+  <button class="team-exp-btn" id="teb-ET" onclick="mexpFilterTeam('ET')">Enterprise Technology</button>
+  <button class="team-exp-btn" id="teb-ISO" onclick="mexpFilterTeam('ISO')">Information Security</button>
+  <button class="team-exp-btn" id="teb-Infra" onclick="mexpFilterTeam('Infra')">IT Infrastructure</button>
+  <button class="team-exp-btn" id="teb-OCIO" onclick="mexpFilterTeam('OCIO')">Office of the CIO</button>
+  <button class="team-exp-btn" id="teb-RC" onclick="mexpFilterTeam('RC')">Research Computing</button>
+  <button class="team-exp-btn" id="teb-FS" onclick="mexpFilterTeam('FS')">Financial Services</button>
+</div>
+
+<div id="matrix-export-float" role="status" aria-live="polite">
+  <span id="matrix-export-count"></span>
+  <button class="mexp-copy-btn" onclick="mexpOpenModal()">Copy outline</button>
+  <button class="mexp-clear-btn" onclick="mexpClearSelection()">Clear</button>
+</div>
+
+<div id="matrix-export-overlay" role="dialog" aria-modal="true" aria-labelledby="matrix-export-title">
+  <div id="matrix-export-modal">
+    <h2 id="matrix-export-title">Export use case outline</h2>
+    <p id="matrix-export-modal-sub"></p>
+    <textarea id="matrix-export-text" readonly aria-label="Plain text use case outline"></textarea>
+    <div class="mexp-modal-actions">
+      <button class="mexp-modal-close" onclick="mexpCloseModal()">Close</button>
+      <button class="mexp-modal-copy" id="mexp-modal-copy-btn" onclick="mexpCopyText()">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
 <p id="matrix-instructions" class="visually-hidden">Keyboard instructions: Use Tab to move through filter buttons, column headers, row headers, and interactive matrix cells. Press Enter or Space on an interactive matrix cell to open detailed use cases. Press Escape to close the details panel.</p>
 <div class="matrix-wrap"><table id="matrix" aria-describedby="matrix-instructions"></table></div>
 <div id="tooltip">
@@ -162,6 +262,7 @@
   <button class="close-panel" tabindex="-1" aria-label="Close panel" onclick="closePanel()">✕</button>
   <h3 id="panel-title"></h3>
   <div class="panel-sub" id="panel-sub"></div>
+  <button class="panel-copy-btn" id="panel-copy-btn" tabindex="-1" onclick="panelCopyList()" aria-label="Copy this list to clipboard">⎘ Copy list</button>
   <div id="panel-content"></div>
 </div>
 <script>
@@ -739,7 +840,8 @@ const table=document.getElementById('matrix');
 let hHTML='<thead><tr>';
 hHTML+=`<th class="corner"><div class="corner-label"><span>↓ UIT Function</span><br><span style="opacity:.5;font-size:8.5px">→ AI Modality</span></div></th>`;
 MODALITIES.forEach((m,mi)=>{
-  hHTML+=`<th class="col-header" id="col-${mi}" scope="col" tabindex="0" aria-label="${m.name.replace(/\n/,' ')} modality column header">
+  hHTML+=`<th class="col-header" id="col-${mi}" data-mod-id="${m.id}" scope="col" tabindex="0" aria-label="${m.name.replace(/\n/,' ')} modality column header">
+    <input type="checkbox" class="col-export-cb" id="exp-cb-${m.id}" aria-label="Select ${m.name.replace(/\n/,' ')} for export" onclick="event.stopPropagation()" onchange="mexpToggleModality('${m.id}',this)">
     <span class="modality-name">${m.name.replace(/\n/,'<br>')}</span>
     <span class="modality-tag">${m.tag}</span>
   </th>`;
@@ -888,7 +990,9 @@ document.addEventListener('mousemove',e=>{if(tooltip.classList.contains('show'))
 // ─── SIDE PANEL ─────────────────────────────────────────────
 const panel=document.getElementById('info-panel');
 let lastFocused=null;
+let panelContext=null;
 function openPanel(role,mod,cell){
+  panelContext={role,mod,cell};
   lastFocused=document.activeElement;
   hideTooltip();
   document.getElementById('panel-title').textContent=role.role.replace(/\n/,' ');
@@ -910,6 +1014,8 @@ function openPanel(role,mod,cell){
   panel.setAttribute('aria-hidden','false');
   const closeBtn=panel.querySelector('.close-panel');
   closeBtn.setAttribute('tabindex','0');
+  const copyBtn=document.getElementById('panel-copy-btn');
+  if(copyBtn){copyBtn.setAttribute('tabindex','0');copyBtn.textContent='⎘ Copy list';copyBtn.classList.remove('copied');}
   closeBtn.focus();
 }
 function closePanel(){
@@ -917,7 +1023,54 @@ function closePanel(){
   panel.setAttribute('aria-hidden','true');
   panel.setAttribute('inert','');
   panel.querySelector('.close-panel').setAttribute('tabindex','-1');
+  const copyBtn=document.getElementById('panel-copy-btn');
+  if(copyBtn)copyBtn.setAttribute('tabindex','-1');
   if(lastFocused)lastFocused.focus();
+}
+function panelCopyList(){
+  if(!panelContext)return;
+  const {role,mod,cell}=panelContext;
+  const lines=[];
+  lines.push('Stanford UIT — AI Use Cases');
+  lines.push('============================');
+  lines.push('Team: '+role.role.replace(/\n/,' ')+'  ('+role.deptLabel+')');
+  lines.push('');
+
+  // Focused modality section
+  lines.push('━━  '+mod.name.replace(/\n/,' ').toUpperCase()+'  ['+mod.tag+']');
+  lines.push('Outcome: '+(OUTCOME_LABELS[mod.outcome]||mod.outcome));
+  lines.push('Fit: '+(cell.s===2?'Primary':'Secondary / emerging'));
+  lines.push('Why: '+cell.why);
+  lines.push('Use cases:');
+  cell.cases.forEach(c=>lines.push('  → '+c));
+  lines.push('');
+
+  // All use cases section
+  lines.push('━━  ALL USE CASES — '+role.role.replace(/\n/,' ').toUpperCase());
+  lines.push('');
+  MODALITIES.forEach(m=>{
+    const c=role.cells[m.id];
+    if(!c||c.s===0||!c.cases.length)return;
+    lines.push(m.name.replace(/\n/,' ')+'  ['+m.tag+']  ('+(OUTCOME_LABELS[m.outcome]||m.outcome)+')');
+    c.cases.forEach(uc=>lines.push('  → '+uc));
+    lines.push('');
+  });
+
+  lines.push('Stanford University IT · uit.stanford.edu');
+  const text=lines.join('\n');
+
+  const btn=document.getElementById('panel-copy-btn');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      if(btn){btn.textContent='✓ Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='⎘ Copy list';btn.classList.remove('copied');},2200);}
+    }).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      if(btn){btn.textContent='✓ Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='⎘ Copy list';btn.classList.remove('copied');},2200);}
+    });
+  } else {
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    if(btn){btn.textContent='✓ Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='⎘ Copy list';btn.classList.remove('copied');},2200);}
+  }
 }
 function getFocusableInPanel(){
   return panel.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
@@ -933,6 +1086,205 @@ document.addEventListener('keydown',e=>{
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
     if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
   }
+});
+
+
+
+// ── MATRIX EXPORT FEATURE ───────────────────────────────────────────────────
+const MEXP_STRENGTH = {2: true, 1: true};
+let mexpSelected = new Set();
+let mexpActiveDept = null;
+
+const MEXP_OUTCOME_LABELS = {time:'Time Saved', capacity:'Capacity Expanded', new:'New Capability Unlocked'};
+const MEXP_DEPT_LABELS = {CXS:'Client Experience & Solutions', ET:'Enterprise Technology', ISO:'Information Security Office', Infra:'IT Infrastructure', OCIO:'Office of the CIO', RC:'Research Computing', FS:'Financial Services'};
+
+function mexpFilterTeam(dept) {
+  mexpActiveDept = dept;
+  document.querySelectorAll('.team-exp-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  const targetId = dept ? 'teb-' + dept : 'teb-all';
+  const target = document.getElementById(targetId);
+  if (target) target.classList.add('active');
+  mexpUpdateFloat();
+}
+
+function mexpUpdateFloat() {
+  const bar = document.getElementById('matrix-export-float');
+  const count = document.getElementById('matrix-export-count');
+  if (mexpSelected.size === 0) {
+    bar.classList.remove('visible');
+  } else {
+    bar.classList.add('visible');
+    const strengthLabel = [MEXP_STRENGTH[2]?'Primary':'', MEXP_STRENGTH[1]?'Secondary':''].filter(Boolean).join(' + ');
+    const teamLabel = mexpActiveDept ? (MEXP_DEPT_LABELS[mexpActiveDept] || mexpActiveDept) : 'all teams';
+    count.textContent = mexpSelected.size + ' modalit' + (mexpSelected.size===1?'y':'ies') + ' · ' + (strengthLabel||'all') + ' · ' + teamLabel;
+  }
+}
+
+function mexpToggleModality(id, cb) {
+  const th = document.querySelector('[data-mod-id="' + id + '"]');
+  if (cb.checked) {
+    mexpSelected.add(id);
+    if (th) th.classList.add('exp-selected');
+  } else {
+    mexpSelected.delete(id);
+    if (th) th.classList.remove('exp-selected');
+  }
+  document.querySelectorAll('.exp-sel-btn').forEach(b => b.classList.remove('active'));
+  mexpUpdateFloat();
+}
+
+function mexpSelectAll() {
+  MODALITIES.forEach(m => {
+    mexpSelected.add(m.id);
+    const th = document.querySelector('[data-mod-id="' + m.id + '"]');
+    const cb = document.getElementById('exp-cb-' + m.id);
+    if (th) th.classList.add('exp-selected');
+    if (cb) cb.checked = true;
+  });
+  document.querySelectorAll('.exp-sel-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.exp-sel-btn').classList.add('active');
+  mexpUpdateFloat();
+}
+
+function mexpSelectOutcome(outcome) {
+  mexpSelected.clear();
+  MODALITIES.forEach(m => {
+    const match = m.outcome === outcome;
+    const th = document.querySelector('[data-mod-id="' + m.id + '"]');
+    const cb = document.getElementById('exp-cb-' + m.id);
+    if (match) mexpSelected.add(m.id);
+    if (th) th.classList.toggle('exp-selected', match);
+    if (cb) cb.checked = match;
+  });
+  document.querySelectorAll('.exp-sel-btn').forEach(b => b.classList.remove('active'));
+  const map = {time:'esb-time', capacity:'esb-capacity', new:'esb-new'};
+  const btn = document.querySelector('.exp-sel-btn.' + map[outcome]);
+  if (btn) btn.classList.add('active');
+  mexpUpdateFloat();
+}
+
+function mexpClearSelection() {
+  mexpSelected.clear();
+  MODALITIES.forEach(m => {
+    const th = document.querySelector('[data-mod-id="' + m.id + '"]');
+    const cb = document.getElementById('exp-cb-' + m.id);
+    if (th) th.classList.remove('exp-selected');
+    if (cb) cb.checked = false;
+  });
+  document.querySelectorAll('.exp-sel-btn').forEach(b => b.classList.remove('active'));
+  mexpUpdateFloat();
+}
+
+function mexpToggleStrength(s) {
+  MEXP_STRENGTH[s] = !MEXP_STRENGTH[s];
+  const btn = document.getElementById('st-' + (s===2?'primary':'secondary'));
+  btn.classList.toggle('on', MEXP_STRENGTH[s]);
+  btn.setAttribute('aria-pressed', String(MEXP_STRENGTH[s]));
+  mexpUpdateFloat();
+}
+
+// ── Generate outline ─────────────────────────────────────────────────────────
+function mexpGenerateOutline() {
+  const selMods = MODALITIES.filter(m => mexpSelected.has(m.id));
+  if (selMods.length === 0) return '';
+
+  const lines = [];
+  lines.push('Stanford UIT — AI Modalities Use Case Matrix');
+  lines.push('=============================================');
+  lines.push('');
+
+  const outcomeSet = [...new Set(selMods.map(m => MEXP_OUTCOME_LABELS[m.outcome]))];
+  const strengthDesc = [MEXP_STRENGTH[2]?'Primary':'', MEXP_STRENGTH[1]?'Secondary':''].filter(Boolean).join(' + ');
+  lines.push('Modalities: ' + selMods.map(m => m.name.replace(/\n/,' ')).join(', '));
+  lines.push('Outcome types: ' + outcomeSet.join(', '));
+  lines.push('Fit level: ' + (strengthDesc || 'all'));
+  lines.push('Team: ' + (mexpActiveDept ? (MEXP_DEPT_LABELS[mexpActiveDept] || mexpActiveDept) : 'All teams'));
+  lines.push('');
+
+  selMods.forEach((mod, i) => {
+    if (i > 0) lines.push('');
+    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    lines.push(mod.name.replace(/\n/,' ').toUpperCase() + '  [' + mod.tag + ']');
+    lines.push('Outcome: ' + MEXP_OUTCOME_LABELS[mod.outcome]);
+    lines.push('');
+
+    // Collect all roles that have this modality at the requested strength levels
+    let roleCount = 0;
+    ROLES.forEach(role => {
+      if (mexpActiveDept && role.dept !== mexpActiveDept) return;
+      const cell = role.cells[mod.id];
+      if (!cell || cell.s === 0) return;
+      if (!MEXP_STRENGTH[cell.s]) return;
+      if (!cell.cases || cell.cases.length === 0) return;
+
+      const fitLabel = cell.s === 2 ? 'Primary' : 'Secondary';
+      lines.push('  ' + role.role.replace(/\n/,' ') + '  (' + role.deptLabel + ')  [' + fitLabel + ']');
+      lines.push('  ' + '─'.repeat(50));
+      lines.push('  Why: ' + cell.why);
+      lines.push('  Use cases:');
+      cell.cases.forEach(c => {
+        lines.push('    → ' + c);
+      });
+      lines.push('');
+      roleCount++;
+    });
+
+    if (roleCount === 0) {
+      lines.push('  (No matching roles at selected strength level)');
+      lines.push('');
+    }
+  });
+
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('Stanford University IT · uit.stanford.edu');
+
+  return lines.join('\n');
+}
+
+function mexpOpenModal() {
+  const selMods = MODALITIES.filter(m => mexpSelected.has(m.id));
+  const overlay = document.getElementById('matrix-export-overlay');
+  const sub = document.getElementById('matrix-export-modal-sub');
+  const textarea = document.getElementById('matrix-export-text');
+  const copyBtn = document.getElementById('mexp-modal-copy-btn');
+
+  const strengthDesc = [MEXP_STRENGTH[2]?'Primary':'', MEXP_STRENGTH[1]?'Secondary':''].filter(Boolean).join(' + ');
+  const teamDesc = mexpActiveDept ? (MEXP_DEPT_LABELS[mexpActiveDept] || mexpActiveDept) : 'All teams';
+  sub.textContent = selMods.length + ' modalit' + (selMods.length===1?'y':'ies') + ' · ' + (strengthDesc||'all') + ' fit · ' + teamDesc;
+  textarea.value = mexpGenerateOutline();
+  copyBtn.textContent = 'Copy to clipboard';
+  copyBtn.classList.remove('copied');
+
+  overlay.classList.add('open');
+  setTimeout(() => { textarea.select(); }, 100);
+}
+
+function mexpCloseModal() {
+  document.getElementById('matrix-export-overlay').classList.remove('open');
+}
+
+function mexpCopyText() {
+  const textarea = document.getElementById('matrix-export-text');
+  const btn = document.getElementById('mexp-modal-copy-btn');
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to clipboard'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    textarea.select(); document.execCommand('copy');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to clipboard'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+document.getElementById('matrix-export-overlay').addEventListener('click', function(e) {
+  if (e.target === this) mexpCloseModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('matrix-export-overlay').classList.contains('open')) mexpCloseModal();
 });
 
 </script>
